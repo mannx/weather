@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"text/template"
 
 	"encoding/json"
 	"net/http"
@@ -15,55 +16,6 @@ import (
 const cityID = 6138517
 const apiKey = "8500043bc3c464bdc0a90c69333c50b9"
 
-/*type WeatherData struct {
-	time      float64
-	code      float64
-	temp      float64
-	feelsLike float64
-	pressure  float64
-	humidity  float64
-	windSpeed float64
-	windDir   float64
-	windGust  float64
-	rain1h    float64
-	rain3h    float64
-	snow1h    float64
-	snow3h    float64
-
-	icon    string // icon name for the current weather
-	sunrise float64
-	sunset  float64
-	name    string // name of the city we are storing data for
-}*/
-
-// displayJson outputs the json structure to stdout with indentations
-//  indent determines the current indentation level in spaces
-func displayJSON(d map[string]interface{}, indent int) {
-	var istr string
-
-	for i := 0; i < indent; i++ {
-		istr = fmt.Sprintf(" %s", istr)
-	}
-
-	for k, v := range d {
-		switch n := v.(type) {
-		case map[string]interface{}: // data deeper in, only display the key
-			fmt.Printf("%s%s:\n", istr, k)
-			displayJSON(n, indent+5) // display the next leve
-		case []interface{}: // slices of things
-			fmt.Printf("* %s%s:\n", istr, k)
-			for _, x := range n {
-				switch m := x.(type) {
-				case map[string]interface{}:
-					displayJSON(m, indent+5)
-				}
-			}
-		default:
-			fmt.Printf("%s%s: %v (%T)\n", istr, k, v, v)
-		}
-	}
-}
-
 // weatherToMap converts a JSON type mapping into a singular flat map with
 //  sub levels starting with the tld string
 //	ie.
@@ -72,27 +24,21 @@ func displayJSON(d map[string]interface{}, indent int) {
 //	converts to map["weather.code"]=102
 //
 func weatherToMap(data map[string]interface{}, output *map[string]interface{}, tld string) {
-	fmt.Println("weatherToMap() starting...")
-
 	for k, v := range data {
 		switch n := v.(type) {
 		case map[string]interface{}: // data deeper in
 			t := fmt.Sprintf("%s.%s", tld, k)
-			fmt.Printf("- %s", t)
 			weatherToMap(n, output, t)
 		case []interface{}:
 			// array of map[]'s
-			fmt.Printf("** %s.%s", tld, k)
 			for _, x := range n {
 				switch m := x.(type) {
 				case map[string]interface{}:
 					t := fmt.Sprintf("%s.%s", tld, k)
-					fmt.Printf("++ %s\n", t)
 					weatherToMap(m, output, t)
 				}
 			}
 		default:
-			fmt.Printf("%s.%s: %v (%T)\n", tld, k, v, v)
 			// get the name of this item using the tld, and current key
 			// and store the value
 			t := fmt.Sprintf("%s.%s", tld, k)
@@ -114,19 +60,19 @@ func getWeatherData(input map[string]interface{}) WeatherData {
 
 	// copy over the float64's values
 	wd.code = input[".weather.id"].(float64)
-	wd.temp = input[".main.temp"].(float64)
-	wd.feelsLike = input[".main.feels_like"].(float64)
-	wd.pressure = input[".main.pressure"].(float64)
-	wd.humidity = input[".main.humidity"].(float64)
-	wd.windSpeed = input[".wind.speed"].(float64)
-	wd.windDir = input[".wind.deg"].(float64)
-	wd.windGust = getFloat64(input, ".wind.gust")
-	wd.rain1h = getFloat64(input, ".rain.rain.1h")
-	wd.rain3h = getFloat64(input, ".rain.rain.3h")
-	wd.snow1h = getFloat64(input, ".snow.snow.1h")
-	wd.snow3h = getFloat64(input, ".snow.snow.3h")
+	wd.Temp = input[".main.temp"].(float64)
+	wd.FeelsLike = input[".main.feels_like"].(float64)
+	wd.Pressure = input[".main.pressure"].(float64)
+	wd.Humidity = input[".main.humidity"].(float64)
+	wd.WindSpeed = input[".wind.speed"].(float64)
+	wd.WindDir = input[".wind.deg"].(float64)
+	wd.WindGust = getFloat64(input, ".wind.gust")
+	wd.Rain1h = getFloat64(input, ".rain.rain.1h")
+	wd.Rain3h = getFloat64(input, ".rain.rain.3h")
+	wd.Snow1h = getFloat64(input, ".snow.snow.1h")
+	wd.Snow3h = getFloat64(input, ".snow.snow.3h")
 
-	wd.icon = input[".weather.icon"].(string)
+	wd.Icon = input[".weather.icon"].(string)
 	wd.sunrise = getFloat64(input, ".sys.sunrise")
 	wd.sunset = getFloat64(input, ".sys.runset")
 	wd.name = input[".name"].(string)
@@ -136,7 +82,7 @@ func getWeatherData(input map[string]interface{}) WeatherData {
 	return wd
 }
 
-func main() {
+func getCurrentWeather() {
 	// retrieve the current weather in json format
 	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?id=%v&appid=%v&units=metric", cityID, apiKey)
 	resp, err := http.Get(url)
@@ -154,13 +100,10 @@ func main() {
 	var res map[string]interface{}
 	json.Unmarshal([]byte(body), &res)
 
-	displayJSON(res, 0)
-
 	output := make(map[string]interface{})
 	weatherToMap(res, &output, "")
 
 	wd := getWeatherData(output)
-	fmt.Printf("code: %v (%T)\n", wd.code, wd.code)
 
 	// open the db
 	db, err := sql.Open("sqlite", "./db.db")
@@ -188,10 +131,44 @@ func main() {
 
 	defer stmt.Close() // make sure to free resources
 
-	_, err = stmt.Exec(wd.time, wd.code, wd.temp, wd.feelsLike, wd.pressure, wd.humidity, wd.windSpeed, wd.windDir, wd.windGust, wd.rain1h, wd.rain3h, wd.snow1h, wd.snow3h, wd.icon, cityID)
+	_, err = stmt.Exec(wd.time, wd.code, wd.Temp, wd.FeelsLike, wd.Pressure, wd.Humidity, wd.WindSpeed, wd.WindDir, wd.WindGust, wd.Rain1h, wd.Rain3h, wd.Snow1h, wd.Snow3h, wd.Icon, cityID)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Current weather logged sucessfully!")
+	//fmt.Println("Current weather logged sucessfully!")
+}
+
+func newWeatherHandler(w http.ResponseWriter, r *http.Request) {
+	getCurrentWeather()
+	fmt.Fprintf(w, "Current weather logged successfully!")
+}
+
+func viewWeatherHandler(w http.ResponseWriter, req *http.Request) {
+	// open the db and show the latest weather report
+	db, err := sql.Open("sqlite", "db.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close() // dont forget to close the db
+
+	wd := GetWeatherData(db)
+
+	t, err := template.ParseFiles("latest.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = t.Execute(w, &wd)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func main() {
+	http.HandleFunc("/new", newWeatherHandler)
+	http.HandleFunc("/view", viewWeatherHandler)
+
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }

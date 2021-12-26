@@ -9,14 +9,13 @@ import (
 	"encoding/json"
 	"net/http"
 
-	//_ "github.com/mattn/go-sqlite3"
 	_ "modernc.org/sqlite"
 )
 
 const cityID = 6138517
 const apiKey = "8500043bc3c464bdc0a90c69333c50b9"
 
-type weatherData struct {
+/*type WeatherData struct {
 	time      float64
 	code      float64
 	temp      float64
@@ -35,7 +34,7 @@ type weatherData struct {
 	sunrise float64
 	sunset  float64
 	name    string // name of the city we are storing data for
-}
+}*/
 
 // displayJson outputs the json structure to stdout with indentations
 //  indent determines the current indentation level in spaces
@@ -97,7 +96,6 @@ func weatherToMap(data map[string]interface{}, output *map[string]interface{}, t
 			// get the name of this item using the tld, and current key
 			// and store the value
 			t := fmt.Sprintf("%s.%s", tld, k)
-			//(*output)[t] = v.(float64)
 			(*output)[t] = v
 		}
 	}
@@ -111,8 +109,8 @@ func getFloat64(in map[string]interface{}, key string) float64 {
 	return v.(float64)
 }
 
-func getWeatherData(input map[string]interface{}) weatherData {
-	wd := weatherData{}
+func getWeatherData(input map[string]interface{}) WeatherData {
+	wd := WeatherData{}
 
 	// copy over the float64's values
 	wd.code = input[".weather.id"].(float64)
@@ -164,11 +162,7 @@ func main() {
 	wd := getWeatherData(output)
 	fmt.Printf("code: %v (%T)\n", wd.code, wd.code)
 
-	//	fmt.Println("\n\n*********\n\n")
-	//	fmt.Printf("Weather code: %v\n", wd.code)
-
 	// open the db
-	//db, err := sql.Open("sqlite3", "./db.db")
 	db, err := sql.Open("sqlite", "./db.db")
 	if err != nil {
 		log.Fatal(err)
@@ -176,43 +170,14 @@ func main() {
 
 	defer db.Close()
 
-	/*
-
-		type weatherData struct {
-			time      float64
-			code      float64
-			temp      float64
-			feelsLike float64
-			pressure  float64
-			humidity  float64
-			windSpeed float64
-			windDir   float64
-			windGust  float64
-			rain1h    float64
-			rain3h    float64
-			snow1h    float64
-			snow3h    float64
-
-			icon    string // icon name for the current weather
-			sunrise float64
-			sunset  float64
-			name    string // name of the city we are storing data for
-		}
-	*/
-
 	sql := "CREATE TABLE IF NOT EXISTS weather (id INTEGER PRIMARY KEY, time TEXT, code REAL, temp REAL, feelsLike REAL, pressure REAL, humidity REAL, windSpeed REAL, windDir REAL, "
 	sql = fmt.Sprintf("%swindGust REAL, rain1h REAL, rain3h REAL, snow1h REAL, snow3h REAL, icon TEXT, city INTEGER)", sql)
 
-	//state, _ := db.Prepare("CREATE TABLE IF NOT EXISTS weather (id INTEGER PRIMARY KEY, time TEXT)")
 	state, err := db.Prepare(sql)
 	if err != nil {
 		log.Fatal(err)
 	}
 	state.Exec()
-
-	/*state, _ = db.Prepare("INSERT INTO weather (time) VALUES (?)")
-	state.Exec(fmt.Sprintf("%s", now.Format(time.RFC1123)))
-	fmt.Println(cityID)*/
 
 	// # of values to insert: 13
 	sql = "INSERT INTO weather (time, code, temp, feelsLike, pressure, humidity, windSpeed, windDir, windGust, rain1h, rain3h, snow1h, snow3h, icon, city) VALUES (?,?,?, ?,?,?, ?,?,?, ?,?,?, ?,?,?)"

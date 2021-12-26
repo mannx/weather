@@ -1,5 +1,6 @@
 package main
 
+// WeatherData contains values used in the database for a given weather entry
 type WeatherData struct {
 	time      float64
 	code      float64

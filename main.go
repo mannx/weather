@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
+	"os"
 
 	"time"
 
@@ -18,7 +20,12 @@ import (
 )
 
 const cityID = 6138517
-const apiKey = "8500043bc3c464bdc0a90c69333c50b9"
+
+//const apiKey = "8500043bc3c464bdc0a90c69333c50b9"
+
+// used to the store the OpenWeatherMap api key.
+// passed to us through the APIKEY environment variable
+var apiKey string
 
 // Template for doing template things
 type Template struct {
@@ -30,10 +37,8 @@ func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Con
 	return t.templates.ExecuteTemplate(w, name, data)
 }
 
-//func newWeatherHandler(w http.ResponseWriter, r *http.Request) {
 func newWeatherHandler(c echo.Context) error {
 	getCurrentWeather()
-	//	fmt.Fprintf(w, "Current weather logged successfully!")
 	return c.String(http.StatusOK, "Weather Updated Successfully!")
 }
 
@@ -49,13 +54,34 @@ func viewWeatherHandler(c echo.Context) error {
 	wd := GetWeatherData(db)
 
 	// convert the time into a user friendly time string
-	t := time.Unix(int64(wd.Time), 0)
+	t := time.Unix(int64(wd.StoreTime), 0)
 	wd.TimeString = t.String()
 
 	return c.Render(http.StatusOK, "temp.html", wd)
 }
 
 func main() {
+	// get required data from environment variables
+	apiKey = os.Getenv("APIKEY")
+	if apiKey == "" {
+		fmt.Printf("API KEY NOT FOUND!\n")
+		log.Fatal()
+	}
+
+	// make sure the database is created before we start trying to use it
+	// open the db
+	db, err := sql.Open("sqlite", "./db.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
+
+	err = createDB(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	t := &Template{
 		templates: template.Must(template.ParseGlob("./static/*.html")),
 	}

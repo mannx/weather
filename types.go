@@ -7,12 +7,11 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 )
 
 // WeatherData structure holds data for a given weather pull
 type WeatherData struct {
-	Time      float64
-	TimeZone  float64
 	code      float64
 	Temp      float64
 	FeelsLike float64
@@ -32,11 +31,12 @@ type WeatherData struct {
 	name    string // name of the city we are storing data for
 
 	TimeString string // used only before send off to the template engine to display a user friendly Time string
+	StoreTime  int64  // system time when this entry was added to the db
 }
 
 // GetWeatherData builds a WeatherData object from the database using the last entry
 func GetWeatherData(db *sql.DB) WeatherData {
-	s := "SELECT time, Timezone, temp, feelsLike, humidity, windSpeed, windDir, rain1h, snow1h, icon FROM weather ORDER BY id DESC LIMIT 1"
+	s := "SELECT StoreTime, temp, feelsLike, humidity, windSpeed, windDir, rain1h, snow1h, icon FROM weather ORDER BY id DESC LIMIT 1"
 	r, err := db.Query(s)
 	if err != nil {
 		log.Fatal(err)
@@ -47,7 +47,7 @@ func GetWeatherData(db *sql.DB) WeatherData {
 	wd := WeatherData{}
 
 	for r.Next() {
-		if err := r.Scan(&wd.Time, &wd.TimeZone, &wd.Temp, &wd.FeelsLike, &wd.Humidity, &wd.WindSpeed, &wd.WindDir, &wd.Rain1h, &wd.Snow1h, &wd.Icon); err != nil {
+		if err := r.Scan(&wd.StoreTime, &wd.Temp, &wd.FeelsLike, &wd.Humidity, &wd.WindSpeed, &wd.WindDir, &wd.Rain1h, &wd.Snow1h, &wd.Icon); err != nil {
 			log.Fatal(err)
 		}
 	}
@@ -116,10 +116,21 @@ func getWeatherData(input map[string]interface{}) WeatherData {
 	wd.sunset = getFloat64(input, ".sys.runset")
 	wd.name = input[".name"].(string)
 
-	wd.Time = getFloat64(input, ".dt")
-	wd.TimeZone = getFloat64(input, ".Timezone")
-
 	return wd
+}
+
+// createDB is used to create the database if it doesnt exist
+// should be called on startup only
+func createDB(db *sql.DB) error {
+	sql := "CREATE TABLE IF NOT EXISTS weather (id INTEGER PRIMARY KEY, Time REAL, code REAL, temp REAL, feelsLike REAL, pressure REAL, humidity REAL, windSpeed REAL, windDir REAL, "
+	sql = fmt.Sprintf("%swindGust REAL, rain1h REAL, rain3h REAL, snow1h REAL, snow3h REAL, icon TEXT, city INTEGER, Timezone REAL, StoreTime INTEGER)", sql)
+
+	state, err := db.Prepare(sql)
+	if err != nil {
+		log.Fatal(err)
+	}
+	state.Exec()
+	return nil
 }
 
 func getCurrentWeather() {
@@ -145,6 +156,9 @@ func getCurrentWeather() {
 
 	wd := getWeatherData(output)
 
+	// get the current time and store it
+	wd.StoreTime = time.Now().Unix()
+
 	// open the db
 	db, err := sql.Open("sqlite", "./db.db")
 	if err != nil {
@@ -153,17 +167,8 @@ func getCurrentWeather() {
 
 	defer db.Close()
 
-	sql := "CREATE TABLE IF NOT EXISTS weather (id INTEGER PRIMARY KEY, Time REAL, code REAL, temp REAL, feelsLike REAL, pressure REAL, humidity REAL, windSpeed REAL, windDir REAL, "
-	sql = fmt.Sprintf("%swindGust REAL, rain1h REAL, rain3h REAL, snow1h REAL, snow3h REAL, icon TEXT, city INTEGER, Timezone REAL)", sql)
-
-	state, err := db.Prepare(sql)
-	if err != nil {
-		log.Fatal(err)
-	}
-	state.Exec()
-
 	// # of values to insert: 13
-	sql = "INSERT INTO weather (Time, code, temp, feelsLike, pressure, humidity, windSpeed, windDir, windGust, rain1h, rain3h, snow1h, snow3h, icon, city, Timezone) VALUES (?,?,?, ?,?,?, ?,?,?, ?,?,?, ?,?,?, ?)"
+	sql := "INSERT INTO weather (code, temp, feelsLike, pressure, humidity, windSpeed, windDir, windGust, rain1h, rain3h, snow1h, snow3h, icon, city, StoreTime) VALUES (?,?, ?,?,?, ?,?,?, ?,?,?, ?,?,?, ?)"
 	stmt, err := db.Prepare(sql)
 	if err != nil {
 		log.Fatal(err)
@@ -171,10 +176,8 @@ func getCurrentWeather() {
 
 	defer stmt.Close() // make sure to free resources
 
-	_, err = stmt.Exec(wd.Time, wd.code, wd.Temp, wd.FeelsLike, wd.Pressure, wd.Humidity, wd.WindSpeed, wd.WindDir, wd.WindGust, wd.Rain1h, wd.Rain3h, wd.Snow1h, wd.Snow3h, wd.Icon, cityID, wd.TimeZone)
+	_, err = stmt.Exec(wd.code, wd.Temp, wd.FeelsLike, wd.Pressure, wd.Humidity, wd.WindSpeed, wd.WindDir, wd.WindGust, wd.Rain1h, wd.Rain3h, wd.Snow1h, wd.Snow3h, wd.Icon, cityID, wd.StoreTime)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	//fmt.Println("Current weather logged sucessfully!")
 }

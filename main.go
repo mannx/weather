@@ -21,7 +21,7 @@ import (
 
 // set the path to the database when used to access it
 // if testing locally, set to ./data/db.db
-const DBPath = "/app/db.db"
+const DBPath = "./data/db.db"
 const cityID = 6138517
 
 //const apiKey = "8500043bc3c464bdc0a90c69333c50b9"

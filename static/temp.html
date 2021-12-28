@@ -1,12 +1,24 @@
 <html>
 <head>
 	<title>Current Temperature</title>
+
+	<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+		<!--
 		Time: {{ .TimeString }}<br/>
 		Time Stored: {{ .StoreTime }}<br/>
 		Temperature: {{ .Temp }}&deg;C<br/>
 		Feels Like: {{ .FeelsLike}}<br/>
+		-->
+
+		<div id="temp_data">
+				<ul>
+						<li>Time: <span id='td_time'>{{.TimeString}}</span></li>
+						<li>Temperature: <span id='td_temp'>{{.Temp}}&deg;C</span></li>
+						<li>Feels Like: <span id='td_feelslike'>{{.FeelsLike}}</span></li>
+				</ul>
+		</div>
 </body>
 </html>

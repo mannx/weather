@@ -12,3 +12,12 @@ Logs weather data using OpenWeatherMap.org into a database.
 	* Better logging
 	* Output needs to be done
 	* Retrieving new weather is done with a GET using a cron job.  Find better way? 
+
+- Installation:
+	* See docker-compose below
+	* Environment variables of note:
+		* APIKEY  		->  api key for OpenWeatherMap.org
+		* path : /app	->	path to where the database file will be located along with other app data (if required)
+	* To automate weather retrieval, the following cron job will need to be set up on the host 
+		* # Defaults to every hour
+		  @hourly docker exec /newdata.sh

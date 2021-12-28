@@ -86,6 +86,36 @@ func weatherToMap(data map[string]interface{}, output *map[string]interface{}, t
 	}
 }
 
+func makeIndent(indent int) string {
+	str := ""
+	for i := 0; i < indent; i++ {
+		str = fmt.Sprintf("%s ", str)
+	}
+	return str
+}
+
+func displayJSON(data map[string]interface{}, indent int) {
+	istr := makeIndent(indent)
+
+	for k, v := range data {
+		switch n := v.(type) {
+		case map[string]interface{}:
+			fmt.Printf("%s%s\n", istr, k)
+			displayJSON(n, indent+1)
+		case []interface{}:
+			for _, x := range n {
+				switch m := x.(type) {
+				case map[string]interface{}:
+					fmt.Printf("%s%s", istr, k)
+					displayJSON(m, indent+1)
+				}
+			}
+		default:
+			fmt.Printf("%s%s: %v (%T)\n", istr, k, v, v)
+		}
+	}
+}
+
 func getFloat64(in map[string]interface{}, key string) float64 {
 	v := in[key]
 	if v == nil {
@@ -160,7 +190,7 @@ func getCurrentWeather() {
 	wd.StoreTime = time.Now().Unix()
 
 	// open the db
-	db, err := sql.Open("sqlite", "./db.db")
+	db, err := sql.Open("sqlite", DBPath)
 	if err != nil {
 		log.Fatal(err)
 	}

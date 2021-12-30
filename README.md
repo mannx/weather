@@ -12,6 +12,7 @@ Logs weather data using OpenWeatherMap.org into a database.
 	* Better logging
 	* Output needs to be done
 	* Retrieving new weather is done with a GET using a cron job.  Find better way? 
+	* Include some sort of version identification to confirm docker images are up to date
 
 - Installation:
 	* See docker-compose below

@@ -21,8 +21,9 @@ import (
 )
 
 // DBPath points to the database file. /app/db.db in container, ./data/db.db while developing
-const DBPath = "./data/db.db"
+const DBPath = "/app/db.db"
 const cityID = 6138517
+const Version = 0.01
 
 //const apiKey = "8500043bc3c464bdc0a90c69333c50b9"
 
@@ -88,6 +89,8 @@ func rawViewHandler(c echo.Context) error {
 }
 
 func main() {
+	fmt.Printf("***\nWeather version: %v\n\n", Version)
+
 	// get required data from environment variables
 	apiKey = os.Getenv("APIKEY")
 	if apiKey == "" {

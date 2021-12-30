@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -62,6 +63,30 @@ func viewWeatherHandler(c echo.Context) error {
 	return c.Render(http.StatusOK, "temp.html", wd)
 }
 
+func rawViewHandler(c echo.Context) error {
+	// retrieve the current weather in json format
+	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?id=%v&appid=%v&units=metric", cityID, apiKey)
+	resp, err := http.Get(url)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var res map[string]interface{}
+	json.Unmarshal([]byte(body), &res)
+
+	fmt.Printf("\n****\n")
+	displayJSON(res, 0)
+
+	return c.String(http.StatusOK, "see log")
+}
+
 func main() {
 	// get required data from environment variables
 	apiKey = os.Getenv("APIKEY")
@@ -108,6 +133,7 @@ func main() {
 	e.GET("/view", viewWeatherHandler)
 	e.GET("/new", newWeatherHandler)
 	e.GET("/api/days", dayViewHandler) // handle viewing of several days of data
+	e.GET("/raw", rawViewHandler)
 
 	fmt.Printf("Starting server...\n")
 

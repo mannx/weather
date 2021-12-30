@@ -19,5 +19,4 @@ Logs weather data using OpenWeatherMap.org into a database.
 		* APIKEY  		->  api key for OpenWeatherMap.org
 		* path : /app	->	path to where the database file will be located along with other app data (if required)
 	* To automate weather retrieval, the following cron job will need to be set up on the host 
-		* # Defaults to every hour
-		  @hourly docker exec /newdata.sh
+		* @hourly docker exec /newdata.sh

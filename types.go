@@ -34,25 +34,43 @@ type WeatherData struct {
 	StoreTime  int64  // system time when this entry was added to the db
 }
 
+// SQLItems contains the database items we are pulling out during a retrieve
+const SQLItems string = "StoreTime, temp, feelsLike, humidity, windSpeed, windDir, rain1h, snow1h, icon"
+
 // GetWeatherData builds a WeatherData object from the database using the last entry
 func GetWeatherData(db *sql.DB) WeatherData {
-	s := "SELECT StoreTime, temp, feelsLike, humidity, windSpeed, windDir, rain1h, snow1h, icon FROM weather ORDER BY id DESC LIMIT 1"
-	r, err := db.Query(s)
+	q := "SELECT %s FROM weather ORDER BY id DESC LIMIT 1"
+	query := fmt.Sprintf(q, SQLItems)
+
+	wd := getWeatherDataCustom(db, query)
+
+	if len(wd) > 1 {
+		fmt.Printf(" [GetWeatherData] -> returned more than 1 result\n")
+	}
+
+	return wd[0]
+}
+
+func getWeatherDataCustom(db *sql.DB, query string) []WeatherData {
+	r, err := db.Query(query)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	defer r.Close()
 
-	wd := WeatherData{}
+	wda := make([]WeatherData, 0)
 
 	for r.Next() {
+		wd := WeatherData{}
 		if err := r.Scan(&wd.StoreTime, &wd.Temp, &wd.FeelsLike, &wd.Humidity, &wd.WindSpeed, &wd.WindDir, &wd.Rain1h, &wd.Snow1h, &wd.Icon); err != nil {
 			log.Fatal(err)
 		}
+
+		wda = append(wda, wd)
 	}
 
-	return wd
+	return wda
 }
 
 // weatherToMap converts a JSON type mapping into a singular flat map with

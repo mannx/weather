@@ -19,8 +19,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-// set the path to the database when used to access it
-// if testing locally, set to ./data/db.db
+// DBPath points to the database file. /app/db.db in container, ./data/db.db while developing
 const DBPath = "./data/db.db"
 const cityID = 6138517
 
@@ -69,8 +68,6 @@ func main() {
 	if apiKey == "" {
 		fmt.Printf("API KEY NOT FOUND!\n")
 		log.Fatal()
-	} else {
-		fmt.Printf("API Key: %v\n", apiKey)
 	}
 
 	fmt.Printf("Opening database...\n")
@@ -103,14 +100,51 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
+	e.Use(middleware.Static("./static"))
+
 	e.Renderer = t
 
 	// routes
 	e.GET("/view", viewWeatherHandler)
 	e.GET("/new", newWeatherHandler)
+	e.GET("/api/days", dayViewHandler) // handle viewing of several days of data
 
 	fmt.Printf("Starting server...\n")
 
 	// start the server
 	e.Logger.Fatal(e.Start(":8080"))
+}
+
+// return json data for the previous :num days
+//  /api/days?num=X
+func dayViewHandler(c echo.Context) error {
+	// bind the num parameter to a variable
+	var numDays int64
+
+	err := echo.QueryParamsBinder(c).
+		Int64("num", &numDays).BindError()
+
+	if err != nil {
+		return c.String(http.StatusInternalServerError, fmt.Sprintf("%v", err))
+	}
+
+	db, err := sql.Open("sqlite", DBPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close() // dont forget to close the db
+
+	//str := fmt.Sprintf("SELECT %s FROM weather ORDER BY StoreTime LIMIT %v", SQLItems, numDays)
+	str := fmt.Sprintf("SELECT * FROM (SELECT %s FROM weather ORDER BY StoreTime DESC LIMIT %v) t1 ORDER BY t1.StoreTime", SQLItems, numDays)
+	wd := getWeatherDataCustom(db, str)
+
+	// convert the time into a user friendly time string
+	for i, n := range wd {
+		t := time.Unix(int64(n.StoreTime), 0)
+		wd[i].TimeString = t.String()
+	}
+
+	fmt.Printf("[] days ot view: %v\n", numDays)
+	return c.Render(http.StatusOK, "days.html", wd)
 }

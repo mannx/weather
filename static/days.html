@@ -2,24 +2,19 @@
 <head>
 	<title>Multiple Hour Viewier</title>
 	<link rel="stylesheet" href="/style.css">
+	<script src="static/graph.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js" integrity="sha512-TW5s0IT/IppJtu76UbysrBH9Hy/5X41OTAbQuffZFU6lQ1rdcLHzpU5BzVvr/YFykoiMYZVWlr/PX1mDcfM9Qg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
-	<!-- loop through all the WeatherData objects and display -->
-	<div class='main'>
-	{{ range . }}
-	<div class='weather'>
-		<ul class='weather_list'>
-				<li>Date: {{ .TimeString }}</li>
-				<li>Temp: {{ .Temp }}</li>
-				<li>Feels Like: {{.FeelsLike}}</li>
-				<li>Wind: {{ .WindSpeed }}</li>
-				<li>Rain 1h: {{.Rain1h}}</li>
-				<li>Snow 1h: {{.Snow1h}}</li>
-		</ul>
-	</div>
-	{{end}}
+		<div>IP Address: <span id='ipaddr'>{{.IPAddr}}</span></div>
+
+	<div>
+			<canvas id='graph' width='400' height='400'></canvas>
 	</div>
 
+<script>
+</script>
 </body>
 </html>

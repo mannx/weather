@@ -21,18 +21,16 @@ RUN go build -o /weather
 #FROM gcr.io/distroless/base-debian10 
 FROM alpine
 
+RUN apk update
+
 # make sure curl is installed to retrieve weather updates
-RUN apk add curl
+RUN apk add curl tzdata
 
 WORKDIR /
 COPY --from=build /weather /weather
 COPY static/ /static/
 
-RUN mkdir app
-
-# copy in the weather retrieve script
-COPY newdata.sh /newdata.sh
-
+RUN mkdir data
 
 # need 
 EXPOSE 8080

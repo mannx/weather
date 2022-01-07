@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 // WeatherData structure holds data for a given weather pull
@@ -38,23 +39,26 @@ type WeatherData struct {
 const SQLItems string = "StoreTime, temp, feelsLike, humidity, windSpeed, windDir, rain1h, snow1h, icon"
 
 // GetWeatherData builds a WeatherData object from the database using the last entry
-func GetWeatherData(db *sql.DB) WeatherData {
+func GetWeatherData(db *sql.DB) (WeatherData, error) {
 	q := "SELECT %s FROM weather ORDER BY id DESC LIMIT 1"
 	query := fmt.Sprintf(q, SQLItems)
 
-	wd := getWeatherDataCustom(db, query)
-
-	if len(wd) > 1 {
-		fmt.Printf(" [GetWeatherData] -> returned more than 1 result\n")
+	wd, err := getWeatherDataCustom(db, query)
+	if err != nil {
+		return WeatherData{}, err
 	}
 
-	return wd[0]
+	if len(wd) > 1 {
+		log.Error().Str("function", "GetWeatherData").Msg("Returned more than 1 result. Expected only 1")
+	}
+
+	return wd[0], nil
 }
 
-func getWeatherDataCustom(db *sql.DB, query string) []WeatherData {
+func getWeatherDataCustom(db *sql.DB, query string) ([]WeatherData, error) {
 	r, err := db.Query(query)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	defer r.Close()
@@ -64,13 +68,13 @@ func getWeatherDataCustom(db *sql.DB, query string) []WeatherData {
 	for r.Next() {
 		wd := WeatherData{}
 		if err := r.Scan(&wd.StoreTime, &wd.Temp, &wd.FeelsLike, &wd.Humidity, &wd.WindSpeed, &wd.WindDir, &wd.Rain1h, &wd.Snow1h, &wd.Icon); err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 
 		wda = append(wda, wd)
 	}
 
-	return wda
+	return wda, nil
 }
 
 // weatherToMap converts a JSON type mapping into a singular flat map with
@@ -175,25 +179,25 @@ func createDB(db *sql.DB) error {
 
 	state, err := db.Prepare(sql)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	state.Exec()
 	return nil
 }
 
-func getCurrentWeather() {
+func getCurrentWeather() error {
 	// retrieve the current weather in json format
 	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?id=%v&appid=%v&units=metric", cityID, apiKey)
 	resp, err := http.Get(url)
 
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	var res map[string]interface{}
@@ -210,7 +214,7 @@ func getCurrentWeather() {
 	// open the db
 	db, err := sql.Open("sqlite", DBPath)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	defer db.Close()
@@ -219,13 +223,11 @@ func getCurrentWeather() {
 	sql := "INSERT INTO weather (code, temp, feelsLike, pressure, humidity, windSpeed, windDir, windGust, rain1h, rain3h, snow1h, snow3h, icon, city, StoreTime) VALUES (?,?, ?,?,?, ?,?,?, ?,?,?, ?,?,?, ?)"
 	stmt, err := db.Prepare(sql)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	defer stmt.Close() // make sure to free resources
 
 	_, err = stmt.Exec(wd.code, wd.Temp, wd.FeelsLike, wd.Pressure, wd.Humidity, wd.WindSpeed, wd.WindDir, wd.WindGust, wd.Rain1h, wd.Rain3h, wd.Snow1h, wd.Snow3h, wd.Icon, cityID, wd.StoreTime)
-	if err != nil {
-		log.Fatal(err)
-	}
+	return err
 }

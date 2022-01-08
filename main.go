@@ -137,6 +137,11 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		//AllowOrigins: []string{"http://localhost"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
+
 	e.Use(middleware.Static("./static"))
 
 	e.Renderer = t
@@ -147,6 +152,7 @@ func main() {
 	e.GET("/raw", rawViewHandler)
 
 	e.GET("/api/json/chart", chartViewHandler) // returns the data we need to display a simple chart
+	e.GET("/api/test", testViewHandler)
 
 	log.Info().Msg("Setting up cron job for updates")
 
@@ -178,7 +184,7 @@ func updateWeatherFunc() {
 	}
 }
 
-// Temp thing
+// DayViewData temp thing
 type DayViewData struct {
 	Weather []WeatherData
 	IPAddr  int
@@ -270,4 +276,22 @@ func chartViewHandler(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, &dta)
 
+}
+
+func testViewHandler(c echo.Context) error {
+
+	db, err := sql.Open("sqlite", DBPath)
+	if err != nil {
+		return err
+	}
+
+	defer db.Close() // dont forget to close the db
+
+	// get the lastest weather entry
+	wd, err := GetWeatherData(db)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, &wd)
 }

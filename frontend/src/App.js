@@ -8,6 +8,7 @@ class App extends Component {
 	render() {
 		return (
 			<div className="App">
+				Weather Previous 24 hours:<br/>
 				<WeatherTable />
 			</div>
 		);

@@ -1,6 +1,8 @@
 #syntax:docker/dockerfile:1
 
+#
 # build stage
+#
 
 FROM golang:alpine AS build
 
@@ -22,21 +24,25 @@ RUN go build -o /weather
 FROM node:alpine AS react
 
 WORKDIR /app/react
+ENV NODE_ENV=production
 
-COPY ./frontend ./
+COPY ["./frontend/package.json", "./frontend/package-lock.json", "./"]
 
-RUN npm install
+RUN npm install --production
+
+COPY ./frontend .
+
 RUN npm run build
-
 
 #
 # Deploy stage
 #
+
 FROM alpine
 
 # make sure required packages are installed
 RUN apk update
-RUN apk add curl tzdata
+RUN apk add tzdata
 
 WORKDIR /
 

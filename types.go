@@ -108,7 +108,7 @@ func weatherToMap(data map[string]interface{}, output *map[string]interface{}, t
 	}
 }
 
-func makeIndent(indent int) string {
+/*func makeIndent(indent int) string {
 	str := ""
 	for i := 0; i < indent; i++ {
 		str = fmt.Sprintf("%s ", str)
@@ -136,7 +136,7 @@ func displayJSON(data map[string]interface{}, indent int) {
 			fmt.Printf("%s%s: %v (%T)\n", istr, k, v, v)
 		}
 	}
-}
+}*/
 
 func getFloat64(in map[string]interface{}, key string) float64 {
 	v := in[key]
@@ -169,6 +169,16 @@ func getWeatherData(input map[string]interface{}) WeatherData {
 	wd.name = input[".name"].(string)
 
 	return wd
+}
+
+// openDB opens a connection to the database, caller is responsible for closing the connection.
+func openDB() (*sql.DB, error) {
+	db, err := sql.Open("sqlite", DBPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
 
 // createDB is used to create the database if it doesnt exist

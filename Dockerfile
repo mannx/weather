@@ -16,21 +16,35 @@ RUN go build -o /weather
 
 
 #
-# deploy stage
+# build react front end
+#
 
-#FROM gcr.io/distroless/base-debian10 
+FROM node:alpine AS react
+
+WORKDIR /app/react
+
+COPY ./frontend ./
+
+RUN npm install
+RUN npm run build
+
+
+#
+# Deploy stage
+#
 FROM alpine
 
+# make sure required packages are installed
 RUN apk update
-
-# make sure curl is installed to retrieve weather updates
 RUN apk add curl tzdata
 
 WORKDIR /
-COPY --from=build /weather /weather
-COPY static/ /static/
 
 RUN mkdir data
+RUN mkdir static
+
+COPY --from=build /weather /weather
+COPY --from=react /app/react/build /static
 
 # need 
 EXPOSE 8080

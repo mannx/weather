@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
         weather:
-                image: mannx/weather
+                image: weather:dev
                 container_name: weather
                 ports:
                         - 8080:8080

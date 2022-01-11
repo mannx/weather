@@ -52,6 +52,14 @@ RUN mkdir static
 COPY --from=build /weather /weather
 COPY --from=react /app/react/build /static
 
+# create 2 symlinks for the static folder to work correctly
+# TODO: fix this properly at some point
+WORKDIR /static
+RUN ln -s static/js
+RUN ln -s static/css
+
+WORKDIR /
+
 # need 
 EXPOSE 8080
 

@@ -18,21 +18,22 @@ Logs weather data using OpenWeatherMap.org into a database.
 
 ## Docker Compose Example
 
+```dockerfile
+version: "3.8"
 
->version: "3.8"
->
->services:
->        weather:
->                image: mannx/weather
->                container_name: weather
->                ports:
->                        - 8080:8080
->                environment:
->                        - APIKEY=*API KEY HERE*
->                        - TZ=*TIMEZONE HERE*
->                        - WEATHER_UPDATE_SCHEDULE=*/30 * * * *
->                volumes:
->                        - *PATH TO DATA DIRECTORY*:/data
->                deploy:
->                        restart_policy:
->                                condition: on-failure
+services:
+        weather:
+                image: mannx/weather
+                container_name: weather
+                ports:
+                        - 8080:8080
+                environment:
+                        - APIKEY=*API KEY HERE*
+                        - TZ=*TIMEZONE HERE*
+                        - WEATHER_UPDATE_SCHEDULE=*/30 * * * *
+                volumes:
+                        - *PATH TO DATA DIRECTORY*:/data
+                deploy:
+                        restart_policy:
+                                condition: on-failure
+```

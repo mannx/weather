@@ -1,10 +1,13 @@
 import React from "react";
+import WeatherChart from "./WeatherChart.jsx";
 
-const User = ({Temp, WindSpeed, Snow1h}) => (
+
+const Stats = ({High, Low, Rain, Snow}) => (
 		<div><ul>
-			<li>Temp: {Temp}</li>
-			<li>Wind: {WindSpeed}</li>
-			<li>Snow: {Snow1h}</li>
+				<li>High: {High}</li>
+				<li>Low: {Low}</li>
+				<li>Snow: {Snow}</li>
+				<li>Rain: {Rain}</li>
 		</ul></div>
 );
 
@@ -22,20 +25,39 @@ class WeatherTable extends React.Component {
 			const data = await resp.json();
 			console.log(data);
 		
+			console.log(data);
 			this.setState({loading: false, weather: data});
 	}
 
 	render() {
-		if(this.state.loading) {
+		if(this.state.loading || !this.state.weather) {
 				return <div>Loading current weather...</div>;
 		}
 
+	
+
 		return (
-			<div>
-				{this.state.weather.map((w) => (
-					<User Temp={w.Temp} WindSpeed={w.WindSpeed} Snow1h={w.Snow1h} />
-				))}
-			</div>
+				<div>
+
+				<div>
+						<h3>24 Hour Stats</h3>
+						<Stats High={this.state.weather.High} Low={this.state.weather.Low} Snow={this.state.weather.Snow} Rain={this.state.weather.Rain} />
+				</div>
+
+				<div>
+						<span>Feels Like</span>
+						<WeatherChart data={this.state.weather.ChartData} item="FeelsLike" />
+				</div>
+
+				<div><span>Snow</span>
+					<WeatherChart data={this.state.weather.ChartData} item="Snow" />
+				</div>
+
+				<div><span>Rain</span>
+					<WeatherChart data={this.state.weather.ChartData} item="Rain" />
+				</div>
+
+				</div>
 		);
 	}
 }

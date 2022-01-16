@@ -20,7 +20,10 @@ class WeatherTable extends React.Component {
 
 
 	async componentDidMount() {
-			const url = "http://localhost:8080/api/24hr";
+			//const url = "http://localhost:8080/api/24hr";
+			const url = "/api/24hr";
+
+
 			const resp = await fetch(url);
 			const data = await resp.json();
 			console.log(data);

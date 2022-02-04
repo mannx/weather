@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	models "github.com/mannx/weather/models"
+	//models "github.com/mannx/weather/models"
 )
 
 // WeatherChartData contains selected items used for charting some data
@@ -23,7 +25,7 @@ type WeatherChartData struct {
 // WeatherDataView is used to return the weather data along with several
 // combined values for the given range
 type WeatherDataView struct {
-	Data []WeatherData
+	Data []models.WeatherData
 
 	Low  float64
 	High float64
@@ -59,7 +61,7 @@ func handle24hrView(c echo.Context) error {
 	return c.JSON(http.StatusOK, &view)
 }
 
-func computeWeatherDataView(data []WeatherData) WeatherDataView {
+func computeWeatherDataView(data []models.WeatherData) WeatherDataView {
 	v := WeatherDataView{Data: data}
 	v.ChartData = make([]WeatherChartData, 0)
 

@@ -8,44 +8,21 @@ import (
 	"net/http"
 	"time"
 
+	models "github.com/mannx/weather/models"
 	"github.com/rs/zerolog/log"
 )
-
-// WeatherData structure holds data for a given weather pull
-type WeatherData struct {
-	code      float64
-	Temp      float64
-	FeelsLike float64
-	Pressure  float64
-	Humidity  float64
-	WindSpeed float64
-	WindDir   float64
-	WindGust  float64
-	Rain1h    float64
-	Rain3h    float64
-	Snow1h    float64
-	Snow3h    float64
-
-	Icon    string // icon name for the current weather
-	sunrise float64
-	sunset  float64
-	name    string // name of the city we are storing data for
-
-	TimeString string // used only before send off to the template engine to display a user friendly Time string
-	StoreTime  int64  // system time when this entry was added to the db
-}
 
 // SQLItems contains the database items we are pulling out during a retrieve
 const SQLItems string = "StoreTime, temp, feelsLike, humidity, windSpeed, windDir, rain1h, snow1h, icon"
 
 // GetWeatherData builds a WeatherData object from the database using the last entry
-func GetWeatherData(db *sql.DB) (WeatherData, error) {
+func GetWeatherData(db *sql.DB) (models.WeatherData, error) {
 	q := "SELECT %s FROM weather ORDER BY id DESC LIMIT 1"
 	query := fmt.Sprintf(q, SQLItems)
 
 	wd, err := getWeatherDataCustom(db, query)
 	if err != nil {
-		return WeatherData{}, err
+		return models.WeatherData{}, err
 	}
 
 	if len(wd) > 1 {
@@ -55,7 +32,7 @@ func GetWeatherData(db *sql.DB) (WeatherData, error) {
 	return wd[0], nil
 }
 
-func getWeatherDataCustom(db *sql.DB, query string) ([]WeatherData, error) {
+func getWeatherDataCustom(db *sql.DB, query string) ([]models.WeatherData, error) {
 	r, err := db.Query(query)
 	if err != nil {
 		return nil, err
@@ -63,10 +40,10 @@ func getWeatherDataCustom(db *sql.DB, query string) ([]WeatherData, error) {
 
 	defer r.Close()
 
-	wda := make([]WeatherData, 0)
+	wda := make([]models.WeatherData, 0)
 
 	for r.Next() {
-		wd := WeatherData{}
+		wd := models.WeatherData{}
 		if err := r.Scan(&wd.StoreTime, &wd.Temp, &wd.FeelsLike, &wd.Humidity, &wd.WindSpeed, &wd.WindDir, &wd.Rain1h, &wd.Snow1h, &wd.Icon); err != nil {
 			return nil, err
 		}
@@ -116,11 +93,11 @@ func getFloat64(in map[string]interface{}, key string) float64 {
 	return v.(float64)
 }
 
-func getWeatherData(input map[string]interface{}) WeatherData {
-	wd := WeatherData{}
+func getWeatherData(input map[string]interface{}) models.WeatherData {
+	wd := models.WeatherData{}
 
 	// copy over the float64's values
-	wd.code = input[".weather.id"].(float64)
+	wd.Code = input[".weather.id"].(float64)
 	wd.Temp = input[".main.temp"].(float64)
 	wd.FeelsLike = input[".main.feels_like"].(float64)
 	wd.Pressure = input[".main.pressure"].(float64)
@@ -134,9 +111,9 @@ func getWeatherData(input map[string]interface{}) WeatherData {
 	wd.Snow3h = getFloat64(input, ".snow.3h")
 
 	wd.Icon = input[".weather.icon"].(string)
-	wd.sunrise = getFloat64(input, ".sys.sunrise")
-	wd.sunset = getFloat64(input, ".sys.runset")
-	wd.name = input[".name"].(string)
+	wd.Sunrise = getFloat64(input, ".sys.sunrise")
+	wd.Sunset = getFloat64(input, ".sys.runset")
+	wd.Name = input[".name"].(string)
 
 	return wd
 }
@@ -208,6 +185,6 @@ func getCurrentWeather(cityID int) error {
 
 	defer stmt.Close() // make sure to free resources
 
-	_, err = stmt.Exec(wd.code, wd.Temp, wd.FeelsLike, wd.Pressure, wd.Humidity, wd.WindSpeed, wd.WindDir, wd.WindGust, wd.Rain1h, wd.Rain3h, wd.Snow1h, wd.Snow3h, wd.Icon, cityID, wd.StoreTime)
+	_, err = stmt.Exec(wd.Code, wd.Temp, wd.FeelsLike, wd.Pressure, wd.Humidity, wd.WindSpeed, wd.WindDir, wd.WindGust, wd.Rain1h, wd.Rain3h, wd.Snow1h, wd.Snow3h, wd.Icon, cityID, wd.StoreTime)
 	return err
 }

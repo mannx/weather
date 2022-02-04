@@ -1,4 +1,4 @@
-module weather
+module github.com/mannx/weather
 
 go 1.17
 
@@ -39,3 +39,5 @@ require (
 	modernc.org/strutil v1.1.1 // indirect
 	modernc.org/token v1.0.0 // indirect
 )
+
+replace github.com/mannx/weather/models => ./models/

@@ -93,7 +93,10 @@ func main() {
 // updateWeatherFunc is called to retrieve and store the current weather
 // this should only be called from a scheduled job
 func updateWeatherFunc() {
+	log.Debug().Msg("updateWeatherFunc()")
+
 	for _, i := range Config.CityIDs {
+		log.Debug().Msgf("   => Logging weather for city: %v", i)
 		err := getCurrentWeather(i)
 		if err != nil {
 			log.Error().Err(err).Msg("Unable to retrieve weather")

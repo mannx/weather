@@ -3,3 +3,5 @@ weather
 data/
 keys.sh
 docker-compose.yml
+test.sh
+config.yml

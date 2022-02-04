@@ -108,36 +108,6 @@ func weatherToMap(data map[string]interface{}, output *map[string]interface{}, t
 	}
 }
 
-func makeIndent(indent int) string {
-	str := ""
-	for i := 0; i < indent; i++ {
-		str = fmt.Sprintf("%s ", str)
-	}
-	return str
-}
-
-func displayJSON(data map[string]interface{}, indent int) {
-	istr := makeIndent(indent)
-
-	for k, v := range data {
-		switch n := v.(type) {
-		case map[string]interface{}:
-			fmt.Printf("%s%s\n", istr, k)
-			displayJSON(n, indent+1)
-		case []interface{}:
-			for _, x := range n {
-				switch m := x.(type) {
-				case map[string]interface{}:
-					fmt.Printf("%s%s", istr, k)
-					displayJSON(m, indent+1)
-				}
-			}
-		default:
-			fmt.Printf("%s%s: %v (%T)\n", istr, k, v, v)
-		}
-	}
-}
-
 func getFloat64(in map[string]interface{}, key string) float64 {
 	v := in[key]
 	if v == nil {
@@ -171,6 +141,16 @@ func getWeatherData(input map[string]interface{}) WeatherData {
 	return wd
 }
 
+// openDB opens a connection to the database, caller is responsible for closing the connection.
+func openDB() (*sql.DB, error) {
+	db, err := sql.Open("sqlite", DBPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
 // createDB is used to create the database if it doesnt exist
 // should be called on startup only
 func createDB(db *sql.DB) error {
@@ -185,9 +165,9 @@ func createDB(db *sql.DB) error {
 	return nil
 }
 
-func getCurrentWeather() error {
+func getCurrentWeather(cityID int) error {
 	// retrieve the current weather in json format
-	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?id=%v&appid=%v&units=metric", cityID, apiKey)
+	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?id=%v&appid=%v&units=metric", cityID, Config.APIKey)
 	resp, err := http.Get(url)
 
 	if err != nil {

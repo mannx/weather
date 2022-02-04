@@ -3,9 +3,11 @@ module weather
 go 1.17
 
 require (
+	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.6.1
 	github.com/robfig/cron/v3 v3.0.0
 	github.com/rs/zerolog v1.26.1
+	gopkg.in/yaml.v2 v2.2.2
 	modernc.org/sqlite v1.14.3
 )
 

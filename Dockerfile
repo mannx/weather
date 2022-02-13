@@ -6,12 +6,19 @@
 
 FROM golang:alpine AS build
 
-WORKDIR /app
+# need gcc tools for 1 or more libraries
+RUN apk add build-base
+
+ENV GOPATH /go/src
+
+WORKDIR /go/src/github.com/mannx/weather
 
 COPY go.mod ./
 COPY go.sum ./
+
 RUN go mod download
 
+COPY ./models ./models
 COPY *.go ./
 
 RUN go build -o /weather
@@ -23,7 +30,7 @@ RUN go build -o /weather
 
 FROM node:alpine AS react
 
-WORKDIR /app/react
+WORKDIR /app
 ENV NODE_ENV=production
 
 COPY ["./frontend/package.json", "./frontend/package-lock.json", "./"]
@@ -50,7 +57,7 @@ RUN mkdir data
 RUN mkdir static
 
 COPY --from=build /weather /weather
-COPY --from=react /app/react/build /static
+COPY --from=react /app/build /static
 
 # create 2 symlinks for the static folder to work correctly
 # TODO: fix this properly at some point

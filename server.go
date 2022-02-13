@@ -1,8 +1,6 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -21,25 +19,7 @@ func initServer() *echo.Echo {
 	e.Use(middleware.Static("./static"))
 
 	// routes
-	e.GET("/api/test", testViewHandler)
 	e.GET("/api/24hr", handle24hrView)
 
 	return e
-}
-
-func testViewHandler(c echo.Context) error {
-	db, err := openDB()
-	if err != nil {
-		return err
-	}
-
-	defer db.Close()
-
-	// get the lastest weather entry
-	wd, err := GetWeatherData(db)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(http.StatusOK, &wd)
 }

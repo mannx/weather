@@ -1,7 +1,11 @@
 package models
 
+import "gorm.io/gorm"
+
 // WeatherData structure holds data for a given weather pull
 type WeatherData struct {
+	gorm.Model
+
 	Code      float64
 	Temp      float64
 	FeelsLike float64

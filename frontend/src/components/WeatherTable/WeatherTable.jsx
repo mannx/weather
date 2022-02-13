@@ -1,5 +1,6 @@
 import React from "react";
 import WeatherChart from "./WeatherChart.jsx";
+import UrlGet from "../URL/URL.jsx";
 
 
 const Stats = ({High, Low, Rain, Snow}) => (
@@ -20,16 +21,12 @@ class WeatherTable extends React.Component {
 
 
 	async componentDidMount() {
-			//const url = "http://localhost:8080/api/24hr";
-			const url = "/api/24hr";
+		const url = UrlGet("24hr");
 
-
-			const resp = await fetch(url);
-			const data = await resp.json();
-			console.log(data);
+		const resp = await fetch(url);
+		const data = await resp.json();
 		
-			console.log(data);
-			this.setState({loading: false, weather: data});
+		this.setState({loading: false, weather: data});
 	}
 
 	render() {
@@ -37,19 +34,15 @@ class WeatherTable extends React.Component {
 				return <div>Loading current weather...</div>;
 		}
 
-	
-
 		return (
+			<div>
 				<div>
-
-				<div>
-						<h3>24 Hour Stats</h3>
-						<Stats High={this.state.weather.High} Low={this.state.weather.Low} Snow={this.state.weather.Snow} Rain={this.state.weather.Rain} />
+					<h3>24 Hour Stats</h3>
+					<Stats High={this.state.weather.High} Low={this.state.weather.Low} Snow={this.state.weather.Snow} Rain={this.state.weather.Rain} />
 				</div>
-
 				<div>
-						<span>Feels Like</span>
-						<WeatherChart data={this.state.weather.ChartData} item="FeelsLike" />
+					<span>Feels Like</span>
+					<WeatherChart data={this.state.weather.ChartData} item="FeelsLike" />
 				</div>
 
 				<div><span>Snow</span>
@@ -60,7 +53,7 @@ class WeatherTable extends React.Component {
 					<WeatherChart data={this.state.weather.ChartData} item="Rain" />
 				</div>
 
-				</div>
+			</div>
 		);
 	}
 }

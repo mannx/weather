@@ -30,16 +30,14 @@ func defaultConfiguration(cfg *Configuration) {
 	*cfg = Configuration{CityIDs: make([]int, 0), APIKey: "--INVALID API KEY--"}
 }
 
-func loadConfiguration() (Configuration, error) {
+func loadConfiguration(cfg *Configuration) error {
 	log.Info().Msg("Preparing to load configuration file")
-
-	var cfg Configuration
 
 	f, err := os.Open(configFileName)
 	if err != nil {
 		// unable to open the file, use a default config
 		log.Error().Err(err).Msg("unable to read config file, using defaults")
-		defaultConfiguration(&cfg)
+		defaultConfiguration(cfg)
 	} else {
 		defer f.Close()
 
@@ -48,22 +46,22 @@ func loadConfiguration() (Configuration, error) {
 		if err != nil {
 			// unable to decode, use default
 			log.Error().Err(err).Msg("unable to parse config file, using defaults")
-			defaultConfiguration(&cfg)
+			defaultConfiguration(cfg)
 		}
 	}
 
 	// read in any enviroment udpates
-	err = envconfig.Process("", &cfg)
+	err = envconfig.Process("", cfg)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to process enviroment")
-		return Configuration{}, err
+		return err
 	}
 
 	for i, n := range cfg.CityIDs {
 		log.Debug().Msgf("[%v] %v", i, n)
 	}
 
-	return cfg, nil
+	return nil
 }
 
 func saveConfiguration(cfg *Configuration) error {

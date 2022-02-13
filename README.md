@@ -7,6 +7,7 @@ Logs weather data using OpenWeatherMap.org into a database.
 - TODO:
 	* Better logging
 	* Output needs to be done
+	* 
 
 - Installation:
 	* See docker-compose below
@@ -14,12 +15,13 @@ Logs weather data using OpenWeatherMap.org into a database.
 		* APIKEY  					->  api key for OpenWeatherMap.org
 		* path : /data				->	path to where the database file will be located along with other app data (if required)
 		* WEATHER_UPDATE_SCHEDULE	->	cron expression of when to pull new weather data in
+		* WEATHER_DATA_PATH			->	if we want/need to change the data directory from /data to something else (Used mainly for development)
 
 
 ## Docker Compose Example
 
 ```dockerfile
-version: "3.8"
+version: "3.0"
 
 services:
         weather:

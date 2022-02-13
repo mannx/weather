@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	models "github.com/mannx/weather/models"
+	"github.com/rs/zerolog/log"
 	//models "github.com/mannx/weather/models"
 )
 
@@ -36,28 +36,20 @@ type WeatherDataView struct {
 }
 
 func handle24hrView(c echo.Context) error {
-	db, err := openDB()
-	if err != nil {
-		return err
-	}
-
-	defer db.Close()
-
 	// retrieve all entries in the last 24 hours
 	now := time.Now()
 	prev := now.Add(-time.Hour * 24)
 
 	// retrieve the data
-	sql := fmt.Sprintf("SELECT %s FROM weather WHERE StoreTime BETWEEN %v AND %v ORDER BY id DESC", SQLItems, prev.Unix(), now.Unix())
+	var wd []models.WeatherData
 
-	wd, err := getWeatherDataCustom(db, sql)
-	if err != nil {
-		return err
+	res := DB.Find(&wd, "store_time BETWEEN ? AND ?", prev.Unix(), now.Unix())
+	if res.Error != nil {
+		log.Error().Err(res.Error).Msg("Unable to retrieve data")
+		return res.Error
 	}
 
-	// compute rest of the view data
 	view := computeWeatherDataView(wd)
-
 	return c.JSON(http.StatusOK, &view)
 }
 

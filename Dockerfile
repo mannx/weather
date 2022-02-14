@@ -61,11 +61,12 @@ COPY --from=react /app/build /static
 
 # create 2 symlinks for the static folder to work correctly
 # TODO: fix this properly at some point
-WORKDIR /static
+#WORKDIR /static
+WORKDIR /
 RUN ln -s static/js
 RUN ln -s static/css
 
-WORKDIR /
+#WORKDIR /
 
 # need 
 EXPOSE 8080

@@ -86,3 +86,20 @@ func computeWeatherDataView(data []models.WeatherData) WeatherDataView {
 
 	return v
 }
+
+func getLatestWeatherView(c echo.Context) error {
+	var wd models.WeatherData
+
+	res := DB.Last(&wd)
+	if res.Error != nil {
+		log.Error().Err(res.Error).Msg("Unable to retrieve latest weather report")
+		return res.Error
+	}
+
+	if res.RowsAffected <= 0 {
+		log.Warn().Msg("Unable to retrieve latest weather...No records available")
+		return c.JSON(http.StatusOK, &models.ServerResponse{Error: true, Message: "No Data Available"})
+	}
+
+	return c.JSON(http.StatusOK, &wd)
+}

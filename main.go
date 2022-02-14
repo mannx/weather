@@ -22,10 +22,8 @@ import (
 // DBPath points to the database file.
 var dbPath string
 
-//const DBPath = "./data/db.db"
-
 // Version of the current build
-const Version = 0.05
+const Version = 0.06
 
 // Config -> Global configuration that is loaded for this instance
 var Config Configuration
@@ -66,14 +64,6 @@ func main() {
 	log.Info().Msg("Setting up cron job for updates")
 
 	c := cron.New()
-	/*expr := os.Getenv("WEATHER_UPDATE_SCHEDULE")
-	if expr == "" {
-		// update not set, default to hourly
-		log.Info().Msg("WEATHER_UPDATE_SCHEDULE not set, defaulting to @hourly")
-		expr = "@hourly"
-	}*/
-
-	//c.AddFunc(expr, updateWeatherFunc)
 	c.AddFunc(Environment.Schedule, updateWeatherFunc)
 	c.Start() // make sure to start the jobs
 

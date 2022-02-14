@@ -12,6 +12,14 @@ const Stats = ({High, Low, Rain, Snow}) => (
 		</ul></div>
 );
 
+const Latest = ({Temp, FeelsLike, Wind}) => (
+	<div><ul>
+		<li>Temp: {Temp}</li>
+		<li>Feels Like: {FeelsLike}</li>
+		<li>Wind: {Wind}</li>
+	</ul></div>
+);
+
 class WeatherTable extends React.Component {
 	
 	state = {
@@ -34,11 +42,22 @@ class WeatherTable extends React.Component {
 				return <div>Loading current weather...</div>;
 		}
 
+		const size = this.state.weather.Data.length;
+		if(size <= 0) { 
+			return <h3>Invalid data length</h3>;
+		}
+
+		const wd = this.state.weather.Data[size-1];
+
 		return (
 			<div>
 				<div>
 					<h3>24 Hour Stats</h3>
 					<Stats High={this.state.weather.High} Low={this.state.weather.Low} Snow={this.state.weather.Snow} Rain={this.state.weather.Rain} />
+				</div>
+				<div>
+					<h3>Latest Weather</h3>
+					<Latest Temp={wd.Temp} FeelsLike={wd.FeelsLike} Wind={wd.WindSpeed} />
 				</div>
 				<div>
 					<span>Feels Like</span>

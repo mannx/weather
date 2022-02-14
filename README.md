@@ -7,7 +7,7 @@ Logs weather data using OpenWeatherMap.org into a database.
 - TODO:
 	* Better logging
 	* Output needs to be done
-	* 
+	* Redo import code.  Parsing OWM response.
 
 - Installation:
 	* See docker-compose below

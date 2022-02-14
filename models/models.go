@@ -27,3 +27,9 @@ type WeatherData struct {
 	TimeString string // used only before send off to the template engine to display a user friendly Time string
 	StoreTime  int64  // system time when this entry was added to the db
 }
+
+// ServerResponse is used to hold an error response to send back
+type ServerResponse struct {
+	Message string
+	Error   bool
+}

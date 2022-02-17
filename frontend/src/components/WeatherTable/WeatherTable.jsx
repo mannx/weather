@@ -44,7 +44,7 @@ class WeatherTable extends React.Component {
 
 		const size = this.state.weather.Data.length;
 		if(size <= 0) { 
-			return <h3>Invalid data length</h3>;
+			return <h3>No data for the last 24 hours</h3>;
 		}
 
 		const wd = this.state.weather.Data[size-1];

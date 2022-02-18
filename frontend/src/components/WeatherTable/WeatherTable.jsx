@@ -60,6 +60,10 @@ class WeatherTable extends React.Component {
 					<Latest Temp={wd.Temp} FeelsLike={wd.FeelsLike} Wind={wd.WindSpeed} />
 				</div>
 				<div>
+					<span>Temperature</span>
+					<WeatherChart data={this.state.weather.ChartData} item="Temp" />
+				</div>
+				<div>
 					<span>Feels Like</span>
 					<WeatherChart data={this.state.weather.ChartData} item="FeelsLike" />
 				</div>

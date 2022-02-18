@@ -5,6 +5,7 @@ const baseURL = "http://localhost:8080";
 const urls = {
 	"24hr": "/api/24hr",
 	"Latest": "/api/latest",
+	"Daily": "/api/daily",
 }
 
 function UrlGet(name) {

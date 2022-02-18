@@ -7,7 +7,6 @@ import (
 	"github.com/labstack/echo/v4"
 	models "github.com/mannx/weather/models"
 	"github.com/rs/zerolog/log"
-	//models "github.com/mannx/weather/models"
 )
 
 // WeatherChartData contains selected items used for charting some data
@@ -102,4 +101,41 @@ func getLatestWeatherView(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, &wd)
+}
+
+func getDailyWeatherView(c echo.Context) error {
+	// we have the current day to view in parameters
+	var month, year, day int
+
+	err := echo.QueryParamsBinder(c).
+		Int("month", &month).
+		Int("year", &year).
+		Int("day", &day).
+		BindError()
+
+	if err != nil {
+		log.Error().Err(err).Msg("[/api/daily] Unable to bind parameters")
+
+		sr := models.ServerResponse{
+			Message: "Unable to bind parameters",
+			Error:   true,
+		}
+		return c.JSON(http.StatusOK, &sr)
+	}
+
+	start := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
+	end := time.Date(year, time.Month(month), day+1, 0, 0, 0, 0, time.UTC)
+
+	log.Debug().Msgf("[/api/daily] Start: %v", start)
+	log.Debug().Msgf("[/api/daily] End: %v", end)
+
+	var data []models.WeatherData
+
+	res := DB.Find(&data, "store_time BETWEEN ? AND ?", start.Unix(), end.Unix())
+	if res.Error != nil {
+		log.Error().Err(res.Error).Msg("Unable to retrieve data")
+		return c.JSON(http.StatusOK, &models.ServerResponse{Message: "unable to get data", Error: true})
+	}
+
+	return c.JSON(http.StatusOK, &data)
 }

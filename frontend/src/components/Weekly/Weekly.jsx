@@ -13,7 +13,7 @@ export default class Weekly extends React.Component {
 
 	render() {
 		return (
-			<h3>Weekly data here, ending {date}</h3>;
+			<h3>Weekly data here, ending {this.state.date.toDateString()}</h3>
 		);
 	}
 }

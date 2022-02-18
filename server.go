@@ -21,6 +21,7 @@ func initServer() *echo.Echo {
 	// routes
 	e.GET("/api/24hr", handle24hrView)
 	e.GET("/api/latest", getLatestWeatherView)
+	e.GET("/api/daily", getDailyWeatherView)
 
 	return e
 }

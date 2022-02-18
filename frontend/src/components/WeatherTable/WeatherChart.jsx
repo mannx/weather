@@ -8,7 +8,7 @@ class WeatherChart extends React.Component
 			<LineChart width={600} height={300} data={this.props.data}>
 					<Line type="monotone" dataKey={this.props.item} stroke="#8884d8" />
 					<CartesianGrid stroke="#ccc" />
-					<XAxis />
+					<XAxis dataKey="TimeString"/>
 					<YAxis />
 					<Tooltip />
 			</LineChart>

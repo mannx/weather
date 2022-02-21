@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"net/http"
@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	models "github.com/mannx/weather/models"
 	"github.com/rs/zerolog/log"
+	"gorm.io/gorm"
 )
 
 // WeatherChartData contains selected items used for charting some data
@@ -34,7 +35,7 @@ type WeatherDataView struct {
 	ChartData []WeatherChartData
 }
 
-func handle24hrView(c echo.Context) error {
+func Handle24hrView(c echo.Context, db *gorm.DB) error {
 	// retrieve all entries in the last 24 hours
 	now := time.Now()
 	prev := now.Add(-time.Hour * 24)
@@ -42,7 +43,7 @@ func handle24hrView(c echo.Context) error {
 	// retrieve the data
 	var wd []models.WeatherData
 
-	res := DB.Find(&wd, "store_time BETWEEN ? AND ?", prev.Unix(), now.Unix())
+	res := db.Find(&wd, "store_time BETWEEN ? AND ?", prev.Unix(), now.Unix())
 	if res.Error != nil {
 		log.Error().Err(res.Error).Msg("Unable to retrieve data")
 		return res.Error
@@ -86,10 +87,10 @@ func computeWeatherDataView(data []models.WeatherData) WeatherDataView {
 	return v
 }
 
-func getLatestWeatherView(c echo.Context) error {
+func GetLatestWeatherView(c echo.Context, db *gorm.DB) error {
 	var wd models.WeatherData
 
-	res := DB.Last(&wd)
+	res := db.Last(&wd)
 	if res.Error != nil {
 		log.Error().Err(res.Error).Msg("Unable to retrieve latest weather report")
 		return res.Error
@@ -101,41 +102,4 @@ func getLatestWeatherView(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, &wd)
-}
-
-func getDailyWeatherView(c echo.Context) error {
-	// we have the current day to view in parameters
-	var month, year, day int
-
-	err := echo.QueryParamsBinder(c).
-		Int("month", &month).
-		Int("year", &year).
-		Int("day", &day).
-		BindError()
-
-	if err != nil {
-		log.Error().Err(err).Msg("[/api/daily] Unable to bind parameters")
-
-		sr := models.ServerResponse{
-			Message: "Unable to bind parameters",
-			Error:   true,
-		}
-		return c.JSON(http.StatusOK, &sr)
-	}
-
-	start := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
-	end := time.Date(year, time.Month(month), day+1, 0, 0, 0, 0, time.UTC)
-
-	log.Debug().Msgf("[/api/daily] Start: %v", start)
-	log.Debug().Msgf("[/api/daily] End: %v", end)
-
-	var data []models.WeatherData
-
-	res := DB.Find(&data, "store_time BETWEEN ? AND ?", start.Unix(), end.Unix())
-	if res.Error != nil {
-		log.Error().Err(res.Error).Msg("Unable to retrieve data")
-		return c.JSON(http.StatusOK, &models.ServerResponse{Message: "unable to get data", Error: true})
-	}
-
-	return c.JSON(http.StatusOK, &data)
 }

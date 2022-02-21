@@ -6,6 +6,7 @@ const urls = {
 	"24hr": "/api/24hr",
 	"Latest": "/api/latest",
 	"Daily": "/api/daily",
+	"Weekly": "/api/weekly",
 }
 
 function UrlGet(name) {

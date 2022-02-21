@@ -1,4 +1,6 @@
 import React from "react";
+import NumberFormat from "react-number-format";
+import DatePicker from "react-date-picker";
 import UrlGet from "../URL/URL.jsx";
 
 export default class Daily extends React.Component {
@@ -24,17 +26,39 @@ export default class Daily extends React.Component {
 		}
 
 		if(this.state.error === true) {
-			errMsg = this.state.errMsg === null ? "Unknown Error" : this.state.errMsg;
+			const errMsg = this.state.errMsg === null ? "Unknown Error" : this.state.errMsg;
 
 			return <h3>Error has occurred: {errMsg}</h3>;
 		}
 
-		return <h3>Data here</h3>;
+		let wd = [];
+
+		for(let k of Object.keys(this.state.data)) {
+			wd.push([k, this.state.data[k]]);
+		}
+
+		return (
+			<table>
+				<thead><tr>
+					<th>Item</th>
+					<th>Value</th>
+				</tr></thead>
+				<tbody>
+					{wd.map(function(obj, i){
+						return (
+							<tr><td>{obj[0]}</td>
+								<td><NumberFormat decimalScale={2} value={obj[1]} displayType="text" thousandSeparator="true" fixedDecimalScale="true" /></td>
+							</tr>
+						);
+					})}
+				</tbody>
+			</table>
+		);
 	}
 
 	loadData = async () => {
 		const month = this.state.date.getMonth()+1;		//month is 0 based
-		const day = this.state.date.getDay();
+		const day = this.state.date.getDate();
 		const year = this.state.date.getFullYear();
 
 		const url = UrlGet("Daily") + "?month="+month+"&day="+day+"&year="+year;
@@ -43,7 +67,7 @@ export default class Daily extends React.Component {
 
 		this.setState({error: false, errMsg: null});	// clear any previous errors
 
-		if(data.Error !== null && data.Message !== null) {
+		if(data.Error !== undefined && data.Message !== undefined) {
 			this.setState({error:true,errMsg:data.Message});
 		}else{
 			this.setState({data: data, loading: false});

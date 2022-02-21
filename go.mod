@@ -45,4 +45,7 @@ require (
 	modernc.org/token v1.0.0 // indirect
 )
 
-replace github.com/mannx/weather/models => ./models/
+replace (
+	github.com/mannx/weather/api => ./api/
+	github.com/mannx/weather/models => ./models/
+)

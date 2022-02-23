@@ -3,6 +3,8 @@ import NumberFormat from "react-number-format";
 import DatePicker from "react-date-picker";
 import UrlGet from "../URL/URL.jsx";
 
+import "./style.css";
+
 export default class Daily extends React.Component {
 	constructor(props) {
 		super(props);
@@ -37,7 +39,8 @@ export default class Daily extends React.Component {
 			wd.push([k, this.state.data[k]]);
 		}
 
-		return (
+		return (<>
+			{this.header()}
 			<table>
 				<thead><tr>
 					<th>Item</th>
@@ -46,14 +49,14 @@ export default class Daily extends React.Component {
 				<tbody>
 					{wd.map(function(obj, i){
 						return (
-							<tr><td>{obj[0]}</td>
+							<tr key={i}><td>{obj[0]}</td>
 								<td><NumberFormat decimalScale={2} value={obj[1]} displayType="text" thousandSeparator="true" fixedDecimalScale="true" /></td>
 							</tr>
 						);
 					})}
 				</tbody>
 			</table>
-		);
+		</>);
 	}
 
 	loadData = async () => {
@@ -61,6 +64,10 @@ export default class Daily extends React.Component {
 		const day = this.state.date.getDate();
 		const year = this.state.date.getFullYear();
 
+		this.loadData2(month, day, year);
+	}
+
+	loadData2 = async (month, day, year) => {
 		const url = UrlGet("Daily") + "?month="+month+"&day="+day+"&year="+year;
 		const resp = await fetch(url);
 		const data = await resp.json();
@@ -72,5 +79,28 @@ export default class Daily extends React.Component {
 		}else{
 			this.setState({data: data, loading: false});
 		}
+	}
+
+
+	header = () => {
+		return (
+			<div>
+				<span>Pick Day to view stats:</span>
+				<DatePicker selected={this.state.date} onChange={(e) => this.dateUpdated(e)} />
+				{this.state.error && <span>{this.state.errMsg}</span>}
+			</div>
+		);
+	}
+
+	dateUpdated = (e) => {
+		this.setState({date: e});
+		this.setState({error: false, errMsg: null});
+
+		// state doesnt update immediatly
+		const month = e.getMonth() + 1;
+		const year = e.getFullYear();
+		const day = e.getDate();
+
+		this.loadData2(month, day, year);
 	}
 }

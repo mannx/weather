@@ -11,13 +11,15 @@ import (
 )
 
 func GetDailyWeatherView(c echo.Context, db *gorm.DB) error {
-	// we have the current day to view in parameters
+	// we have the current day to view in parameters, along with the city id
 	var month, year, day int
+	var city int
 
 	err := echo.QueryParamsBinder(c).
 		Int("month", &month).
 		Int("year", &year).
 		Int("day", &day).
+		Int("city", &city).
 		BindError()
 
 	if err != nil {
@@ -38,7 +40,7 @@ func GetDailyWeatherView(c echo.Context, db *gorm.DB) error {
 
 	var data []models.WeatherData
 
-	res := db.Find(&data, "store_time BETWEEN ? AND ?", start.Unix(), end.Unix())
+	res := db.Where("city_id = ?", city).Where("store_time BETWEEN ? AND ?", start.Unix(), end.Unix()).Find(&data)
 	if res.Error != nil {
 		log.Error().Err(res.Error).Msg("Unable to retrieve data")
 		return c.JSON(http.StatusOK, &models.ServerResponse{Message: "unable to get data", Error: true})
@@ -71,6 +73,9 @@ func GetDailyWeatherView(c echo.Context, db *gorm.DB) error {
 		if stats.MinTemp == 0 {
 			stats.MinTemp = wd.Temp
 		}
+		if stats.MaxTemp == 0 {
+			stats.MaxTemp = wd.Temp
+		}
 
 		if stats.MinWindSpeed > wd.WindSpeed {
 			stats.MinWindSpeed = wd.WindSpeed
@@ -102,6 +107,7 @@ func GetDailyWeatherView(c echo.Context, db *gorm.DB) error {
 	stats.AverageWind = stats.AverageWind / float64(len(data))
 	stats.AverageRain = stats.AverageRain / float64(len(data))
 	stats.AverageSnow = stats.AverageSnow / float64(len(data))
+	stats.AverageTemp = stats.AverageTemp / float64(len(data))
 
 	return c.JSON(http.StatusOK, &stats)
 }

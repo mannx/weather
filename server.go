@@ -23,7 +23,8 @@ func initServer() *echo.Echo {
 	// routes
 	e.GET("/api/24hr", func(c echo.Context) error { return api.Handle24hrView(c, DB) })
 	e.GET("/api/latest", func(c echo.Context) error { return api.GetLatestWeatherView(c, DB) })
-	e.GET("api/daily", func(c echo.Context) error { return api.GetDailyWeatherView(c, DB) })
+	e.GET("/api/daily", func(c echo.Context) error { return api.GetDailyWeatherView(c, DB) })
+	e.GET("/api/cities", func(c echo.Context) error { return api.GetCityList(c, DB, &Config) })
 
 	return e
 }

@@ -15,6 +15,8 @@ export default class Daily extends React.Component {
 			loading: true,
 			error: false,
 			errMsg: null,
+
+			cities: [],		//list of cities we might have data for
 		}
 	}
 
@@ -33,6 +35,10 @@ export default class Daily extends React.Component {
 			return <h3>Error has occurred: {errMsg}</h3>;
 		}
 
+		return this.renderData();
+	}
+
+	renderData = () => {
 		let wd = [];
 
 		for(let k of Object.keys(this.state.data)) {
@@ -68,7 +74,7 @@ export default class Daily extends React.Component {
 	}
 
 	loadData2 = async (month, day, year) => {
-		const url = UrlGet("Daily") + "?month="+month+"&day="+day+"&year="+year;
+		const url = UrlGet("Daily") + "?month="+month+"&day="+day+"&year="+year+"&city=6138517";
 		const resp = await fetch(url);
 		const data = await resp.json();
 
@@ -87,6 +93,10 @@ export default class Daily extends React.Component {
 			<div>
 				<span>Pick Day to view stats:</span>
 				<DatePicker selected={this.state.date} onChange={(e) => this.dateUpdated(e)} />
+				<label>Pick city to view
+				<select value={this.state.selectedCity} onChange={(e) => this.cityUpdated(e)}>
+				</select>
+				</label>
 				{this.state.error && <span>{this.state.errMsg}</span>}
 			</div>
 		);

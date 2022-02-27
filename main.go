@@ -26,7 +26,7 @@ var dbPath string
 const Version = 0.06
 
 // Config -> Global configuration that is loaded for this instance
-var Config Configuration
+var Config models.Configuration
 
 // DB -> Global connection to the database
 var DB *gorm.DB
@@ -57,6 +57,10 @@ func main() {
 
 	log.Info().Msg("Migrating database...")
 	migrateDB()
+
+	// uncomment run and rebuild, or use a flag to call if required (or web option?)
+	/*log.Debug().Msg("Adding city data to database...")
+	updateCityIDdb()*/
 
 	log.Info().Msg("Initializing echo and middleware")
 	e := initServer()
@@ -105,4 +109,28 @@ func updateWeatherFunc() {
 
 func migrateDB() {
 	DB.AutoMigrate(&models.WeatherData{})
+}
+
+// temp function to add the test city id to the current database
+func updateCityIDdb() {
+	if len(Config.CityIDs) > 1 {
+		log.Error().Msg("Too many city ids found")
+		return
+	}
+
+	var data []models.WeatherData
+	cityID := Config.CityIDs[0]
+
+	res := DB.Find(&data)
+	if res.Error != nil {
+		log.Error().Err(res.Error).Msg("Unable to retrieve data for update")
+		return
+	}
+
+	log.Debug().Msg("Updating city id's in database...")
+	for _, d := range data {
+		d.CityID = cityID
+		DB.Save(&d)
+	}
+	log.Debug().Msg("Update finished")
 }

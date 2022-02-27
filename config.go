@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/kelseyhightower/envconfig"
+	models "github.com/mannx/weather/models"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
 )
@@ -15,22 +16,15 @@ import (
 // Path to the config file
 const configFileName = "./data/config.yml"
 
-// Configuration structure to old various bits of config data
-type Configuration struct {
-	CityIDs       []int  `yaml:"CityIDs"`
-	APIKey        string `yaml:"APIKey", envconfig:"APIKEY"`
-	WeatherUpdate string `yaml:"WeatherUpdate", envconfig:"WEATHER_UPDATE_SCHEDULE"`
-}
-
 // defaultConfiguration returns a default Config structure
 // in case no config file was found
-func defaultConfiguration(cfg *Configuration) {
+func defaultConfiguration(cfg *models.Configuration) {
 	log.Info().Msg("Generating default Configuration file, No valid API key set")
 
-	*cfg = Configuration{CityIDs: make([]int, 0), APIKey: "--INVALID API KEY--"}
+	*cfg = models.Configuration{CityIDs: make([]int, 0), APIKey: "--INVALID API KEY--"}
 }
 
-func loadConfiguration(cfg *Configuration) error {
+func loadConfiguration(cfg *models.Configuration) error {
 	log.Info().Msg("Preparing to load configuration file")
 
 	f, err := os.Open(configFileName)
@@ -64,7 +58,7 @@ func loadConfiguration(cfg *Configuration) error {
 	return nil
 }
 
-func saveConfiguration(cfg *Configuration) error {
+func saveConfiguration(cfg *models.Configuration) error {
 	log.Info().Msg("Preparing to save configuration")
 
 	f, err := os.OpenFile(configFileName, os.O_RDWR|os.O_CREATE, 0755)

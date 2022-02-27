@@ -6,6 +6,7 @@ import "gorm.io/gorm"
 type WeatherData struct {
 	gorm.Model
 
+	CityID    int // id for the city that this data is for
 	Code      float64
 	Temp      float64
 	FeelsLike float64
@@ -32,4 +33,11 @@ type WeatherData struct {
 type ServerResponse struct {
 	Message string
 	Error   bool
+}
+
+// Configuration stores configuration data set by the user in a config file
+type Configuration struct {
+	CityIDs       []int  `yaml:"CityIDs"`
+	APIKey        string `yaml:"APIKey", envconfig:"APIKEY"`
+	WeatherUpdate string `yaml:"WeatherUpdate", envconfig:"WEATHER_UPDATE_SCHEDULE"`
 }

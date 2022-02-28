@@ -14,7 +14,7 @@ import (
 //
 
 // Path to the config file
-const configFileName = "./data/config.yml"
+const configFileName = "config.yml"
 
 // defaultConfiguration returns a default Config structure
 // in case no config file was found
@@ -27,7 +27,8 @@ func defaultConfiguration(cfg *models.Configuration) {
 func loadConfiguration(cfg *models.Configuration) error {
 	log.Info().Msg("Preparing to load configuration file")
 
-	f, err := os.Open(configFileName)
+	cfn := Environment.Path(configFileName) // use the supplied path
+	f, err := os.Open(cfn)
 	if err != nil {
 		// unable to open the file, use a default config
 		log.Error().Err(err).Msg("unable to read config file, using defaults")
@@ -56,21 +57,4 @@ func loadConfiguration(cfg *models.Configuration) error {
 	}
 
 	return nil
-}
-
-func saveConfiguration(cfg *models.Configuration) error {
-	log.Info().Msg("Preparing to save configuration")
-
-	f, err := os.OpenFile(configFileName, os.O_RDWR|os.O_CREATE, 0755)
-	if err != nil {
-		log.Error().Err(err).Msg("Unable to open config file")
-		return err
-	}
-
-	defer f.Close()
-
-	encode := yaml.NewEncoder(f)
-	err = encode.Encode(&Config)
-	log.Info().Msg("Configuration Encoding complete")
-	return err
 }

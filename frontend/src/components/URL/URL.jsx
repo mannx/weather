@@ -7,6 +7,7 @@ const urls = {
 	"Latest": "/api/latest",
 	"Daily": "/api/daily",
 	"Weekly": "/api/weekly",
+	"CityList": "/api/cities",
 }
 
 function UrlGet(name) {

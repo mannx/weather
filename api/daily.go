@@ -32,6 +32,11 @@ func GetDailyWeatherView(c echo.Context, db *gorm.DB) error {
 		return c.JSON(http.StatusOK, &sr)
 	}
 
+	if city == 0 {
+		// invalid city name, return an empty result
+		return c.JSON(http.StatusOK, &models.ServerResponse{Message: "Select City to view Data for", Error: true})
+	}
+
 	start := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
 	end := time.Date(year, time.Month(month), day+1, 0, 0, 0, 0, time.UTC)
 
@@ -44,6 +49,12 @@ func GetDailyWeatherView(c echo.Context, db *gorm.DB) error {
 	if res.Error != nil {
 		log.Error().Err(res.Error).Msg("Unable to retrieve data")
 		return c.JSON(http.StatusOK, &models.ServerResponse{Message: "unable to get data", Error: true})
+	}
+
+	log.Debug().Msgf("Retrieved %v weather records...", res.RowsAffected)
+	if res.RowsAffected == 0 {
+		log.Warn().Msgf("0 weather records retrieved for city %v", city)
+		return c.JSON(http.StatusOK, &models.ServerResponse{Message: "No records available", Error: true})
 	}
 
 	// return structure containing the stats we want to display
@@ -109,5 +120,6 @@ func GetDailyWeatherView(c echo.Context, db *gorm.DB) error {
 	stats.AverageSnow = stats.AverageSnow / float64(len(data))
 	stats.AverageTemp = stats.AverageTemp / float64(len(data))
 
+	log.Debug().Msg("Returning daily data...")
 	return c.JSON(http.StatusOK, &stats)
 }

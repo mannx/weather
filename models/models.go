@@ -41,3 +41,11 @@ type Configuration struct {
 	APIKey        string `yaml:"APIKey", envconfig:"APIKEY"`
 	WeatherUpdate string `yaml:"WeatherUpdate", envconfig:"WEATHER_UPDATE_SCHEDULE"`
 }
+
+// CityData holds a city ID and name for quick look up instead of parseing the json every time
+type CityData struct {
+	gorm.Model
+
+	CityID int
+	Name   string
+}

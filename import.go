@@ -103,6 +103,7 @@ func getCurrentWeather(cityID int) error {
 
 	// get the current time and store it
 	wd.StoreTime = time.Now().Unix()
+	wd.CityID = cityID
 
 	// save to the db
 	DB.Save(&wd)

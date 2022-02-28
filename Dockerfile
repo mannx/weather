@@ -18,7 +18,9 @@ COPY go.sum ./
 
 RUN go mod download
 
+# copy over required directories
 COPY ./models ./models
+COPY ./api ./api
 COPY *.go ./
 
 RUN go build -o /weather
@@ -59,18 +61,15 @@ RUN mkdir static
 COPY --from=build /weather /weather
 COPY --from=react /app/build /static
 
-# create 2 symlinks for the static folder to work correctly
-# TODO: fix this properly at some point
-#WORKDIR /static
 WORKDIR /
-RUN ln -s static/js
-RUN ln -s static/css
 
-#WORKDIR /
+# copy in the city.json list that should be found in ./data/city.json, along with startup script
+COPY ./city.list.min.json ./city.json
+COPY run.sh ./
 
 # need 
 EXPOSE 8080
 
 USER root:root
 
-ENTRYPOINT ["/weather"]
+ENTRYPOINT ["/run.sh"]

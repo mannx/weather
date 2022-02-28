@@ -1,6 +1,8 @@
 package main
 
 import (
+	"path/filepath"
+
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog/log"
 )
@@ -24,4 +26,9 @@ func (e *EnvironmentDefinition) Init() {
 func (e *EnvironmentDefinition) Default() {
 	e.DataPath = "/data"
 	e.Schedule = "@hourly"
+}
+
+// Path returns a path to a file in the data path
+func (e *EnvironmentDefinition) Path(file string) string {
+	return filepath.Join(e.DataPath, file)
 }

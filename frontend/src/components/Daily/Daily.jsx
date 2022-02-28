@@ -16,7 +16,8 @@ export default class Daily extends React.Component {
 			error: false,
 			errMsg: null,
 
-			cities: [],		//list of cities we might have data for
+			cities: [],		//list of cities we might have data for {ID: xxxx, Name: city_name}
+			cityid: null,	// id of the city to display data for
 		}
 	}
 
@@ -25,20 +26,27 @@ export default class Daily extends React.Component {
 	}
 
 	render() {
-		if(this.state.loading === true || this.state.data === null) {
-			return <h2>Loading data for day {this.state.date.toDateString()}</h2>;
+		let output = null;
+
+		if(this.state.cityid === null) {
+			// no city id, display a message to select a city
+			output = <></>;
+		}else{
+			// have a city id, return the data for it
+			output = this.renderData();
 		}
 
-		if(this.state.error === true) {
-			const errMsg = this.state.errMsg === null ? "Unknown Error" : this.state.errMsg;
-
-			return <h3>Error has occurred: {errMsg}</h3>;
-		}
-
-		return this.renderData();
+		return (<>
+			{this.header()}
+			{output}
+		</>);
 	}
 
 	renderData = () => {
+		if(this.state.data === null) {
+			return <h3>Loading data</h3>;
+		}
+
 		let wd = [];
 
 		for(let k of Object.keys(this.state.data)) {
@@ -46,7 +54,6 @@ export default class Daily extends React.Component {
 		}
 
 		return (<>
-			{this.header()}
 			<table>
 				<thead><tr>
 					<th>Item</th>
@@ -66,15 +73,25 @@ export default class Daily extends React.Component {
 	}
 
 	loadData = async () => {
+		// get the list of cities if we dont have them
+		if(this.state.cities === undefined || this.state.cities === null || this.state.cities.length === 0) {
+			const url = UrlGet("CityList");
+			const resp = await fetch(url);
+			const data = await resp.json();
+
+			this.setState({cities: data});
+		}
+
 		const month = this.state.date.getMonth()+1;		//month is 0 based
 		const day = this.state.date.getDate();
 		const year = this.state.date.getFullYear();
 
-		this.loadData2(month, day, year);
+		this.loadData2(month, day, year, 0);
 	}
 
-	loadData2 = async (month, day, year) => {
-		const url = UrlGet("Daily") + "?month="+month+"&day="+day+"&year="+year+"&city=6138517";
+	loadData2 = async (month, day, year, city) => {
+		const cid = city === undefined ? 0 : city;
+		const url = UrlGet("Daily") + "?month="+month+"&day="+day+"&year="+year+"&city="+cid;
 		const resp = await fetch(url);
 		const data = await resp.json();
 
@@ -82,22 +99,39 @@ export default class Daily extends React.Component {
 
 		if(data.Error !== undefined && data.Message !== undefined) {
 			this.setState({error:true,errMsg:data.Message});
+			this.setState({data:null, loading:true});
 		}else{
 			this.setState({data: data, loading: false});
 		}
 	}
 
+	loadDaily = async (city) => {
+		const month = this.state.date.getMonth()+1;		//month is 0 based
+		const day = this.state.date.getDate();
+		const year = this.state.date.getFullYear();
+		const cid = city === undefined ? 0 : city;
+
+		this.loadData2(month, day, year, cid);
+	}
 
 	header = () => {
 		return (
 			<div>
+				<div>
 				<span>Pick Day to view stats:</span>
 				<DatePicker selected={this.state.date} onChange={(e) => this.dateUpdated(e)} />
+				</div>
+				<div>
 				<label>Pick city to view
 				<select value={this.state.selectedCity} onChange={(e) => this.cityUpdated(e)}>
+					<option value={0}>Pick a city</option>
+					{this.state.cities.map(function(obj, i) {
+						return <option value={obj.ID}>{obj.Name}</option>;
+					})}
 				</select>
 				</label>
-				{this.state.error && <span>{this.state.errMsg}</span>}
+				</div>
+				{this.state.error && <div>{this.state.errMsg}</div>}
 			</div>
 		);
 	}
@@ -112,5 +146,10 @@ export default class Daily extends React.Component {
 		const day = e.getDate();
 
 		this.loadData2(month, day, year);
+	}
+
+	cityUpdated = (e) => {
+		this.setState({cityid: e.target.value});
+		this.loadDaily(e.target.value);
 	}
 }

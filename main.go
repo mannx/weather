@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
+	"flag"
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"time"
 
 	"github.com/robfig/cron/v3"
@@ -23,7 +23,7 @@ import (
 var dbPath string
 
 // Version of the current build
-const Version = 0.06
+const Version = 0.07
 
 // Config -> Global configuration that is loaded for this instance
 var Config models.Configuration
@@ -33,7 +33,7 @@ var DB *gorm.DB
 
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	zerolog.SetGlobalLevel(zerolog.DebugLevel) // can chagne to zerolog.DebugLevel for more info, or ErrorLevel for just errors
+	zerolog.SetGlobalLevel(zerolog.InfoLevel) // can chagne to zerolog.DebugLevel for more info, or ErrorLevel for just errors
 
 	log.Info().Msgf("Weather version: %v", Version)
 
@@ -47,7 +47,7 @@ func main() {
 	}
 	log.Debug().Msgf("APIKey: %v", Config.APIKey)
 
-	dbPath = filepath.Join(Environment.DataPath, "db.db")
+	dbPath = Environment.Path("db.db")
 
 	log.Info().Msg("Initializing database...")
 	DB, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
@@ -58,9 +58,15 @@ func main() {
 	log.Info().Msg("Migrating database...")
 	migrateDB()
 
-	// uncomment run and rebuild, or use a flag to call if required (or web option?)
-	/*log.Debug().Msg("Adding city data to database...")
-	updateCityIDdb()*/
+	// this is used to initialize a already in use database.
+	// once all db's that are in use have been successully updated, this code can be removed for good
+	// since this should only affect early versions
+	cityadd := flag.Bool("city", false, "add first city id to all current entries")
+	flag.Parse()
+	if *cityadd {
+		updateCityIDdb()
+	}
+	// END CODE REMOVAL SECTION
 
 	log.Info().Msg("Initializing echo and middleware")
 	e := initServer()
@@ -109,13 +115,15 @@ func updateWeatherFunc() {
 
 func migrateDB() {
 	DB.AutoMigrate(&models.WeatherData{})
+	DB.AutoMigrate(&models.CityData{})
 }
 
+// START CODE REMOVAL SECTION
 // temp function to add the test city id to the current database
+// once all early version db's have been updated, this can get removed
 func updateCityIDdb() {
 	if len(Config.CityIDs) > 1 {
-		log.Error().Msg("Too many city ids found")
-		return
+		log.Error().Msg("Too many city ids found, using first in list")
 	}
 
 	var data []models.WeatherData
@@ -134,3 +142,5 @@ func updateCityIDdb() {
 	}
 	log.Debug().Msg("Update finished")
 }
+
+// END CODE REMOVAL SECTION

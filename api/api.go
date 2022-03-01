@@ -36,6 +36,17 @@ type WeatherDataView struct {
 }
 
 func Handle24hrView(c echo.Context, db *gorm.DB) error {
+	// we have the city id provided by the 'id' parameter
+	var cityid int
+
+	err := echo.QueryParamsBinder(c).
+		Int("id", &cityid).
+		BindError()
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to bind paramter: id [Handle24hrView]")
+		return serverError(c, "Missing paramter 'id'")
+	}
+
 	// retrieve all entries in the last 24 hours
 	now := time.Now()
 	prev := now.Add(-time.Hour * 24)
@@ -43,7 +54,8 @@ func Handle24hrView(c echo.Context, db *gorm.DB) error {
 	// retrieve the data
 	var wd []models.WeatherData
 
-	res := db.Find(&wd, "store_time BETWEEN ? AND ?", prev.Unix(), now.Unix())
+	//res := db.Find(&wd, "store_time BETWEEN ? AND ?", prev.Unix(), now.Unix())
+	res := db.Where("city_id = ?", cityid).Where("store_time BETWEEN ? AND ?", prev.Unix(), now.Unix()).Find(&wd)
 	if res.Error != nil {
 		log.Error().Err(res.Error).Msg("Unable to retrieve data")
 		return res.Error

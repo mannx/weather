@@ -24,7 +24,11 @@ func initServer() *echo.Echo {
 	e.GET("/api/24hr", func(c echo.Context) error { return api.Handle24hrView(c, DB) })
 	e.GET("/api/latest", func(c echo.Context) error { return api.GetLatestWeatherView(c, DB) })
 	e.GET("/api/daily", func(c echo.Context) error { return api.GetDailyWeatherView(c, DB) })
-	e.GET("/api/cities", func(c echo.Context) error { return api.GetCityList(c, DB, &Config) })
+	e.GET("/api/cities", func(c echo.Context) error { return api.GetCityList(c, DB) })
 
+	e.POST("/api/city/add", func(c echo.Context) error { return api.ValidateCity(c, DB) })
+	e.POST("/api/city/confirm", func(c echo.Context) error { return api.AddCity(c, DB) })
+
+	e.GET("/api/migrate", func(c echo.Context) error { return api.ConfigToDatabaseHandler(c, DB, &Config) })
 	return e
 }

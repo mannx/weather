@@ -10,6 +10,8 @@ import (
 type EnvironmentDefinition struct {
 	DataPath string `envconfig:"WEATHER_DATA_PATH"`
 	Schedule string `envconfig:"WEATHER_UPDATE_SCHEDULE"`
+	ApiKey   string `envconfig:"WEATHER_API_KEY"`
+	LogLevel string `envconfig:"WEATHER_LOG_LEVEL"`
 }
 
 var Environment EnvironmentDefinition
@@ -26,6 +28,8 @@ func (e *EnvironmentDefinition) Init() {
 func (e *EnvironmentDefinition) Default() {
 	e.DataPath = "/data"
 	e.Schedule = "@hourly"
+	e.ApiKey = "--INVALID API KEY--"
+	e.LogLevel = "INFO"
 }
 
 // Path returns a path to a file in the data path

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/robfig/cron/v3"
@@ -33,12 +34,14 @@ var DB *gorm.DB
 
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	zerolog.SetGlobalLevel(zerolog.InfoLevel) // can chagne to zerolog.DebugLevel for more info, or ErrorLevel for just errors
+	zerolog.SetGlobalLevel(zerolog.DebugLevel) // can chagne to zerolog.DebugLevel for more info, or ErrorLevel for just errors
 
 	log.Info().Msgf("Weather version: %v", Version)
 
 	log.Info().Msg("Initializing environment...")
 	Environment.Init()
+
+	updateLogLevel() // sets the log level based on environment variable, defaults to INFO
 
 	// load configuration file
 	err := loadConfiguration(&Config)
@@ -100,11 +103,18 @@ func main() {
 // updateWeatherFunc is called to retrieve and store the current weather
 // this should only be called from a scheduled job
 func updateWeatherFunc() {
-	log.Debug().Msgf("updateWeatherFunc(%v)", len(Config.CityIDs))
+	// instead of config file, we use the ConfigEntry table for cities
+	// only use entries noted as Active
+	var data []models.ConfigEntry
+	res := DB.Find(&data)
+	if res.Error != nil {
+		log.Error().Err(res.Error).Msg("Unable to retrieve cites for weather update!")
+		return
+	}
 
-	for _, i := range Config.CityIDs {
-		log.Debug().Msgf("   => Logging weather for city: %v", i)
-		err := getCurrentWeather(i)
+	for _, i := range data {
+		log.Debug().Msgf("   => Logging weather for city: %v [%v]", i.Name, i.CityID)
+		err := getCurrentWeather(i.CityID)
 		if err != nil {
 			log.Error().Err(err).Msg("Unable to retrieve weather")
 		} else {
@@ -116,6 +126,24 @@ func updateWeatherFunc() {
 func migrateDB() {
 	DB.AutoMigrate(&models.WeatherData{})
 	DB.AutoMigrate(&models.CityData{})
+	DB.AutoMigrate(&models.ConfigEntry{})
+}
+
+func updateLogLevel() {
+	lookup := map[string]zerolog.Level{
+		"DEBUG":    zerolog.DebugLevel,
+		"INFO":     zerolog.InfoLevel,
+		"WARN":     zerolog.WarnLevel,
+		"ERROR":    zerolog.ErrorLevel,
+		"FATAL":    zerolog.FatalLevel,
+		"PANIC":    zerolog.PanicLevel,
+		"NOLEVEL":  zerolog.NoLevel,
+		"DISABLED": zerolog.Disabled,
+	}
+
+	key := strings.ToUpper(Environment.LogLevel)
+	log.Debug().Msgf("Setting log level to: %v [%v]", key, lookup[key])
+	zerolog.SetGlobalLevel(lookup[key])
 }
 
 // START CODE REMOVAL SECTION

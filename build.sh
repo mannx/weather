@@ -43,7 +43,7 @@ fi
 
 #docker buildx build --platform linux/arm -t mannx/weather:beta -o type=tar,dest=weather.tar .
 #docker build -t weather .
-docker buildx build --platform linux/arm,linux/amd64 -t mannx/weather:0.07 . --push
+docker buildx build --platform linux/arm,linux/amd64 -t mannx/weather:latest . --push
 echo "Docker build return with status $?"
 
 # if successfuly build, run tar through gz to get compressed archive

@@ -24,7 +24,7 @@ import (
 var dbPath string
 
 // Version of the current build
-const Version = 0.07
+const Version = 0.08
 
 // Config -> Global configuration that is loaded for this instance
 var Config models.Configuration

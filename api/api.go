@@ -54,7 +54,6 @@ func Handle24hrView(c echo.Context, db *gorm.DB) error {
 	// retrieve the data
 	var wd []models.WeatherData
 
-	//res := db.Find(&wd, "store_time BETWEEN ? AND ?", prev.Unix(), now.Unix())
 	res := db.Where("city_id = ?", cityid).Where("store_time BETWEEN ? AND ?", prev.Unix(), now.Unix()).Find(&wd)
 	if res.Error != nil {
 		log.Error().Err(res.Error).Msg("Unable to retrieve data")

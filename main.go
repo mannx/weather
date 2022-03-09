@@ -23,8 +23,11 @@ import (
 // DBPath points to the database file.
 var dbPath string
 
-// Version of the current build
-const Version = 0.08
+// Better versioning set at compile time
+var (
+	BuildVersion string = ""
+	BuildTime    string = ""
+)
 
 // Config -> Global configuration that is loaded for this instance
 var Config models.Configuration
@@ -36,7 +39,8 @@ func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	zerolog.SetGlobalLevel(zerolog.DebugLevel) // can chagne to zerolog.DebugLevel for more info, or ErrorLevel for just errors
 
-	log.Info().Msgf("Weather version: %v", Version)
+	log.Info().Msgf("  => Build Version: %v", BuildVersion)
+	log.Info().Msgf("  => Build Time: %v", BuildTime)
 
 	log.Info().Msg("Initializing environment...")
 	Environment.Init()

@@ -22,9 +22,9 @@ RUN go mod download
 COPY ./models ./models
 COPY ./api ./api
 COPY *.go ./
+COPY go-build.sh ./
 
-RUN go build -o /weather
-
+RUN ./go-build.sh
 
 #
 # build react front end
@@ -54,9 +54,6 @@ RUN apk update
 RUN apk add tzdata
 
 WORKDIR /
-
-RUN mkdir data
-RUN mkdir static
 
 COPY --from=build /weather /weather
 COPY --from=react /app/build /static

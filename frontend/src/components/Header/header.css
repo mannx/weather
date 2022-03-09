@@ -1,0 +1,24 @@
+
+ul.navControl {
+		list-style-type: none;
+		margin: 0;
+		padding: 0;
+		overflow: hidden;
+		background-color: cadetblue;
+}
+
+li.navControl {
+		float: left;
+}
+
+li.navControl span.navLink {
+		display: block;
+		color: white;
+		text-align: center;
+		padding: 14px 16px;
+		text-decoration: none;
+}
+
+li.navControl span.navLink:hover {
+		background-color: cornflowerblue;
+}

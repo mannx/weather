@@ -1,7 +1,8 @@
-db.db
 weather
 data/
 keys.sh
-docker-compose.yml
 test.sh
 config.yml
+docker-compose.yml
+city.list.min.json
+city.json

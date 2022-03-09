@@ -1,11 +1,13 @@
-package main
+package api
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
+	models "github.com/mannx/weather/models"
+	"github.com/rs/zerolog/log"
+	"gorm.io/gorm"
 )
 
 // WeatherChartData contains selected items used for charting some data
@@ -23,7 +25,7 @@ type WeatherChartData struct {
 // WeatherDataView is used to return the weather data along with several
 // combined values for the given range
 type WeatherDataView struct {
-	Data []WeatherData
+	Data []models.WeatherData
 
 	Low  float64
 	High float64
@@ -33,33 +35,37 @@ type WeatherDataView struct {
 	ChartData []WeatherChartData
 }
 
-func handle24hrView(c echo.Context) error {
-	db, err := openDB()
-	if err != nil {
-		return err
-	}
+func Handle24hrView(c echo.Context, db *gorm.DB) error {
+	// we have the city id provided by the 'id' parameter
+	var cityid int
 
-	defer db.Close()
+	err := echo.QueryParamsBinder(c).
+		Int("id", &cityid).
+		BindError()
+	if err != nil {
+		log.Error().Err(err).Msg("Unable to bind paramter: id [Handle24hrView]")
+		return serverError(c, "Missing paramter 'id'")
+	}
 
 	// retrieve all entries in the last 24 hours
 	now := time.Now()
 	prev := now.Add(-time.Hour * 24)
 
 	// retrieve the data
-	sql := fmt.Sprintf("SELECT %s FROM weather WHERE StoreTime BETWEEN %v AND %v ORDER BY id DESC", SQLItems, prev.Unix(), now.Unix())
+	var wd []models.WeatherData
 
-	wd, err := getWeatherDataCustom(db, sql)
-	if err != nil {
-		return err
+	//res := db.Find(&wd, "store_time BETWEEN ? AND ?", prev.Unix(), now.Unix())
+	res := db.Where("city_id = ?", cityid).Where("store_time BETWEEN ? AND ?", prev.Unix(), now.Unix()).Find(&wd)
+	if res.Error != nil {
+		log.Error().Err(res.Error).Msg("Unable to retrieve data")
+		return res.Error
 	}
 
-	// compute rest of the view data
 	view := computeWeatherDataView(wd)
-
 	return c.JSON(http.StatusOK, &view)
 }
 
-func computeWeatherDataView(data []WeatherData) WeatherDataView {
+func computeWeatherDataView(data []models.WeatherData) WeatherDataView {
 	v := WeatherDataView{Data: data}
 	v.ChartData = make([]WeatherChartData, 0)
 
@@ -91,4 +97,21 @@ func computeWeatherDataView(data []WeatherData) WeatherDataView {
 	}
 
 	return v
+}
+
+func GetLatestWeatherView(c echo.Context, db *gorm.DB) error {
+	var wd models.WeatherData
+
+	res := db.Last(&wd)
+	if res.Error != nil {
+		log.Error().Err(res.Error).Msg("Unable to retrieve latest weather report")
+		return res.Error
+	}
+
+	if res.RowsAffected <= 0 {
+		log.Warn().Msg("Unable to retrieve latest weather...No records available")
+		return c.JSON(http.StatusOK, &models.ServerResponse{Error: true, Message: "No Data Available"})
+	}
+
+	return c.JSON(http.StatusOK, &wd)
 }

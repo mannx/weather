@@ -1,15 +1,14 @@
 import React, {Component} from "react";
 import "./App.css";
 
-import WeatherTable from "./components/WeatherTable/WeatherTable.jsx";
+import Header from "./components/Header/Header.jsx";
 
 
 class App extends Component {
 	render() {
 		return (
 			<div className="App">
-				Weather Previous 24 hours:<br/>
-				<WeatherTable />
+				<Header />
 			</div>
 		);
 	}

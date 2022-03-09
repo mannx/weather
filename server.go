@@ -1,10 +1,10 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	api "github.com/mannx/weather/api"
 )
 
 func initServer() *echo.Echo {
@@ -21,25 +21,14 @@ func initServer() *echo.Echo {
 	e.Use(middleware.Static("./static"))
 
 	// routes
-	e.GET("/api/test", testViewHandler)
-	e.GET("/api/24hr", handle24hrView)
+	e.GET("/api/24hr", func(c echo.Context) error { return api.Handle24hrView(c, DB) })
+	e.GET("/api/latest", func(c echo.Context) error { return api.GetLatestWeatherView(c, DB) })
+	e.GET("/api/daily", func(c echo.Context) error { return api.GetDailyWeatherView(c, DB) })
+	e.GET("/api/cities", func(c echo.Context) error { return api.GetCityList(c, DB) })
 
+	e.POST("/api/city/add", func(c echo.Context) error { return api.ValidateCity(c, DB) })
+	e.POST("/api/city/confirm", func(c echo.Context) error { return api.AddCity(c, DB) })
+
+	e.GET("/api/migrate", func(c echo.Context) error { return api.ConfigToDatabaseHandler(c, DB, &Config) })
 	return e
-}
-
-func testViewHandler(c echo.Context) error {
-	db, err := openDB()
-	if err != nil {
-		return err
-	}
-
-	defer db.Close()
-
-	// get the lastest weather entry
-	wd, err := GetWeatherData(db)
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(http.StatusOK, &wd)
 }

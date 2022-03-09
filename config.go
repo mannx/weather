@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/kelseyhightower/envconfig"
+	models "github.com/mannx/weather/models"
 	"github.com/rs/zerolog/log"
 	"gopkg.in/yaml.v2"
 )
@@ -13,33 +14,25 @@ import (
 //
 
 // Path to the config file
-const configFileName = "./data/config.yml"
-
-// Configuration structure to old various bits of config data
-type Configuration struct {
-	CityIDs       []int  `yaml:"CityIDs"`
-	APIKey        string `yaml:"APIKey", envconfig:"APIKEY"`
-	WeatherUpdate string `yaml:"WeatherUpdate", envconfig:"WEATHER_UPDATE_SCHEDULE"`
-}
+const configFileName = "config.yml"
 
 // defaultConfiguration returns a default Config structure
 // in case no config file was found
-func defaultConfiguration(cfg *Configuration) {
+func defaultConfiguration(cfg *models.Configuration) {
 	log.Info().Msg("Generating default Configuration file, No valid API key set")
 
-	*cfg = Configuration{CityIDs: make([]int, 0), APIKey: "--INVALID API KEY--"}
+	*cfg = models.Configuration{CityIDs: make([]int, 0), APIKey: "--INVALID API KEY--"}
 }
 
-func loadConfiguration() (Configuration, error) {
+func loadConfiguration(cfg *models.Configuration) error {
 	log.Info().Msg("Preparing to load configuration file")
 
-	var cfg Configuration
-
-	f, err := os.Open(configFileName)
+	cfn := Environment.Path(configFileName) // use the supplied path
+	f, err := os.Open(cfn)
 	if err != nil {
 		// unable to open the file, use a default config
 		log.Error().Err(err).Msg("unable to read config file, using defaults")
-		defaultConfiguration(&cfg)
+		defaultConfiguration(cfg)
 	} else {
 		defer f.Close()
 
@@ -48,37 +41,20 @@ func loadConfiguration() (Configuration, error) {
 		if err != nil {
 			// unable to decode, use default
 			log.Error().Err(err).Msg("unable to parse config file, using defaults")
-			defaultConfiguration(&cfg)
+			defaultConfiguration(cfg)
 		}
 	}
 
 	// read in any enviroment udpates
-	err = envconfig.Process("", &cfg)
+	err = envconfig.Process("", cfg)
 	if err != nil {
 		log.Error().Err(err).Msg("Unable to process enviroment")
-		return Configuration{}, err
+		return err
 	}
 
 	for i, n := range cfg.CityIDs {
 		log.Debug().Msgf("[%v] %v", i, n)
 	}
 
-	return cfg, nil
-}
-
-func saveConfiguration(cfg *Configuration) error {
-	log.Info().Msg("Preparing to save configuration")
-
-	f, err := os.OpenFile(configFileName, os.O_RDWR|os.O_CREATE, 0755)
-	if err != nil {
-		log.Error().Err(err).Msg("Unable to open config file")
-		return err
-	}
-
-	defer f.Close()
-
-	encode := yaml.NewEncoder(f)
-	err = encode.Encode(&Config)
-	log.Info().Msg("Configuration Encoding complete")
-	return err
+	return nil
 }

@@ -38,7 +38,7 @@ type ServerResponse struct {
 // Configuration stores configuration data set by the user in a config file
 type Configuration struct {
 	CityIDs       []int  `yaml:"CityIDs"`
-	APIKey        string `yaml:"APIKey", envconfig:"APIKEY"`
+	APIKey        string `yaml:"APIKey", envconfig:"WEATHER_API_KEY"`
 	WeatherUpdate string `yaml:"WeatherUpdate", envconfig:"WEATHER_UPDATE_SCHEDULE"`
 }
 

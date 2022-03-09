@@ -99,10 +99,22 @@ func computeWeatherDataView(data []models.WeatherData) WeatherDataView {
 	return v
 }
 
+// GetLatestWeatherView returns the last saved weather data for the given city with id 'id'
 func GetLatestWeatherView(c echo.Context, db *gorm.DB) error {
+	var cityID int
+	_ = echo.QueryParamsBinder(c). // get the id, if fails or not present handle accordingly
+					Int("id", &cityID).
+					BindError()
+
+	if cityID == 0 {
+		// error or no id given
+		log.Warn().Msg("[GetLastestWeatherView] No city ID provided for latest weather")
+		return serverError(c, "No City ID provided for latest weather")
+	}
+
 	var wd models.WeatherData
 
-	res := db.Last(&wd)
+	res := db.Last(&wd, "city_id = ?", cityID)
 	if res.Error != nil {
 		log.Error().Err(res.Error).Msg("Unable to retrieve latest weather report")
 		return res.Error

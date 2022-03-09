@@ -48,7 +48,7 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("Unable to parse configuration files, exiting...")
 	}
-	log.Debug().Msgf("APIKey: %v", Config.APIKey)
+	log.Debug().Msgf("APIKey: %v", Environment.ApiKey)
 
 	dbPath = Environment.Path("db.db")
 

@@ -30,5 +30,7 @@ func initServer() *echo.Echo {
 	e.POST("/api/city/confirm", func(c echo.Context) error { return api.AddCity(c, DB) })
 
 	e.GET("/api/migrate", func(c echo.Context) error { return api.ConfigToDatabaseHandler(c, DB, &Config) })
+
+	e.GET("/api/autocomplete/city", func(c echo.Context) error { return api.AutoCompleteCity(c) })
 	return e
 }

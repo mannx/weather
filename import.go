@@ -79,7 +79,7 @@ func getCurrentWeather(cityID int) error {
 	log.Debug().Msgf("getCurrentWeather(%v) ==>", cityID)
 
 	// retrieve the current weather in json format
-	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?id=%v&appid=%v&units=metric", cityID, Config.APIKey)
+	url := fmt.Sprintf("http://api.openweathermap.org/data/2.5/weather?id=%v&appid=%v&units=metric", cityID, Environment.ApiKey)
 	resp, err := http.Get(url)
 
 	if err != nil {

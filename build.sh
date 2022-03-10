@@ -82,10 +82,10 @@ echo "Building docker image with tag: $TAG..."
 
 if [ $LOCAL -eq 1 ]; then
 	echo "Building local image..."
-	docker build -t weather:$TAG .
+	docker build -t weather:$TAG -t weather:latest .
 else
 	echo "Building repo image..."
-	docker buildx build --platform linux/arm,linux/amd64 -t mannx/weather:$TAG . --push
+	docker buildx build --platform linux/arm,linux/amd64 -t mannx/weather:$TAG -t mannx/weather:latest . --push
 fi
 
 echo "Docker build return with status $?"
